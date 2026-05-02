@@ -145,14 +145,7 @@ class MySystems extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.8),
-                  ],
-                ),
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -274,14 +267,7 @@ class MySystems extends StatelessWidget {
             // Primary Call to Action Button.
             Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.8),
-                  ],
-                ),
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
