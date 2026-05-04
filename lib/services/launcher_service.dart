@@ -28,11 +28,15 @@ class LauncherService {
     try {
       // Prefer locally cached version downloaded from GitHub (newer than bundled).
       String jsonString;
-      final cachedPath = await SystemsUpdateService.getCachedSystemPath(jsonFileName);
+      final cachedPath = await SystemsUpdateService.getCachedSystemPath(
+        jsonFileName,
+      );
       if (cachedPath != null) {
         jsonString = await File(cachedPath).readAsString();
       } else {
-        jsonString = await rootBundle.loadString('assets/systems/$jsonFileName');
+        jsonString = await rootBundle.loadString(
+          'assets/systems/$jsonFileName',
+        );
       }
       final config = jsonDecode(jsonString) as Map<String, dynamic>;
 
@@ -349,8 +353,8 @@ class LauncherService {
       // Only convert bare filesystem paths to file:// scheme.
       final String uri =
           (romPath.startsWith('content://') || romPath.startsWith('file://'))
-              ? romPath
-              : Uri.file(romPath).toString();
+          ? romPath
+          : Uri.file(romPath).toString();
       result = result.replaceAll('{file.uri}', uri);
 
       if (game.titleId != null) {
