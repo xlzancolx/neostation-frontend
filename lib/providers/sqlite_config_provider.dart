@@ -15,6 +15,7 @@ import '../repositories/config_repository.dart';
 import '../repositories/game_repository.dart';
 import '../services/permission_service.dart';
 import '../services/steam_scraper_service.dart';
+import '../services/systems_update_service.dart';
 import '../models/secondary_display_state.dart';
 import 'package:flutter/services.dart';
 import '../widgets/tv_directory_picker.dart';
@@ -120,6 +121,13 @@ class SqliteConfigProvider extends ChangeNotifier {
 
       // Initialize the configuration system
       await SqliteConfigService.initialize();
+
+      // Check for system definition updates from GitHub before syncing to DB.
+      // This ensures the scan starts with the latest emulator unique_ids.
+      await SystemsUpdateService.initialize();
+      _scanStatus = 'Checking for system updates...';
+      notifyListeners();
+      await SystemsUpdateService.checkAndUpdate();
 
       // CRITICAL: Always reload and sync system JSONs with the database at startup
       // to ensure that new cores or systems modified in assets are reflected,

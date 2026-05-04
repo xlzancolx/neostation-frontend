@@ -50,6 +50,16 @@ class ThemeProvider extends ChangeNotifier with WidgetsBindingObserver {
     'valentine': AppPalettes.valentinePalette,
     'rgc': AppPalettes.rgcPalette,
     'tw_dark': AppPalettes.twDarkPalette,
+    'dracula': AppPalettes.draculaPalette,
+    'nord': AppPalettes.nordPalette,
+    'gruvbox': AppPalettes.gruvboxPalette,
+    'tokyo_night': AppPalettes.tokyoNightPalette,
+    'solarized_light': AppPalettes.solarizedLightPalette,
+    'one_light': AppPalettes.oneLightPalette,
+    'catppuccin': AppPalettes.catppuccinPalette,
+    'solarized_dark': AppPalettes.solarizedDarkPalette,
+    'palenight': AppPalettes.palenightPalette,
+    'horizon': AppPalettes.horizonPalette,
   };
 
   /// Human-readable mapping for theme identifiers.
@@ -61,6 +71,16 @@ class ThemeProvider extends ChangeNotifier with WidgetsBindingObserver {
     'valentine': 'Valentine',
     'rgc': 'RGC Light',
     'tw_dark': 'TW Dark',
+    'dracula': 'Dracula',
+    'nord': 'Nord',
+    'gruvbox': 'Gruvbox',
+    'tokyo_night': 'Tokyo Night',
+    'solarized_light': 'Solarized Light',
+    'one_light': 'One Light',
+    'catppuccin': 'Catppuccin',
+    'solarized_dark': 'Solarized Dark',
+    'palenight': 'Palenight',
+    'horizon': 'Horizon',
   };
 
   ThemeProvider() {

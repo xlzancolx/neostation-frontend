@@ -4,6 +4,7 @@ import 'package:neostation/utils/gamepad_nav.dart';
 import 'package:neostation/providers/sqlite_config_provider.dart';
 import 'package:neostation/services/update_service.dart';
 import 'package:neostation/services/systems_update_service.dart';
+import 'package:neostation/data/datasources/sqlite_service.dart';
 import 'package:neostation/widgets/update_dialog.dart';
 import 'package:neostation/widgets/custom_notification.dart';
 import 'package:neostation/services/logger_service.dart';
@@ -166,13 +167,18 @@ class AppScreenState extends State<AppScreen> {
     // Then attempt to pull newer configs from GitHub.
     try {
       final result = await SystemsUpdateService.checkAndUpdate();
-      if (result != null && mounted) {
-        AppNotification.showNotification(
-          context,
-          'Systems updated to v${result.newVersion} (${result.filesUpdated} files)',
-          type: NotificationType.success,
-          icon: Icons.system_update_alt,
-        );
+      if (result != null) {
+        // Re-sync DB with newly downloaded JSON files (covers the case where
+        // the provider was already initialized before this download completed).
+        await SqliteService.loadAndSyncSystems();
+        if (mounted) {
+          AppNotification.showNotification(
+            context,
+            'Systems updated to v${result.newVersion} (${result.filesUpdated} files)',
+            type: NotificationType.success,
+            icon: Icons.system_update_alt,
+          );
+        }
       }
     } catch (e) {
       _log.e('AppScreen: Systems update check failure', error: e);
