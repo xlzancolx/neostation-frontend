@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'config_service.dart';
 import 'logger_service.dart';
@@ -53,8 +54,25 @@ class SystemsUpdateService {
   /// Must be called on every app start. Ensures `systems_version` in SQLite
   /// always has a meaningful value so the About screen and any version
   /// checks have a baseline even without internet.
+  ///
+  /// Also detects Neostation app version changes: if the app was updated,
+  /// resets `systems_version` so `checkAndUpdate` forces a re-download and
+  /// `loadAndSyncSystems` re-applies all bundled/cached JSON definitions.
   static Future<void> initialize() async {
     try {
+      // Detect app version change — force full systems re-sync on app update.
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentAppVersion = packageInfo.version;
+      final storedAppVersion = await SqliteService.getNeostationAppVersion();
+
+      if (storedAppVersion != currentAppVersion) {
+        _log.i(
+          'SystemsUpdateService: app updated $storedAppVersion → $currentAppVersion, resetting systems_version',
+        );
+        await SqliteService.updateSystemsVersion('');
+        await SqliteService.updateNeostationAppVersion(currentAppVersion);
+      }
+
       final current = await SqliteService.getSystemsVersion();
       if (current.isEmpty) {
         await SqliteService.updateSystemsVersion('bundled');

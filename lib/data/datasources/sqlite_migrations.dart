@@ -240,6 +240,9 @@ class SqliteMigrations {
       case 78:
         await _migrateToVersion78(db);
         break;
+      case 79:
+        await _migrateToVersion79(db);
+        break;
       default:
         _log.w('No migration defined for version $version');
     }
@@ -4166,6 +4169,25 @@ class SqliteMigrations {
       _log.i('Migration v74 completed');
     } catch (e, stackTrace) {
       _log.e('Error in migration v74: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  static Future<void> _migrateToVersion79(Database db) async {
+    _log.i('Migration v79: Add neostation_app_version to user_config');
+    try {
+      final tableInfo = db.select('PRAGMA table_info(user_config)');
+      final columns = tableInfo.map((c) => c['name'].toString()).toList();
+      if (!columns.contains('neostation_app_version')) {
+        db.execute(
+          "ALTER TABLE user_config ADD COLUMN neostation_app_version TEXT DEFAULT ''",
+        );
+        _log.i('Column neostation_app_version added to user_config');
+      }
+      _log.i('Migration v79 completed');
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v79: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }

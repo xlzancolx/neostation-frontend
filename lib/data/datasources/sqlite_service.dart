@@ -421,7 +421,7 @@ class SqliteService {
   SqliteService._internal();
 
   // Database configuration
-  static const int _databaseVersion = 78;
+  static const int _databaseVersion = 79;
   static const String _databaseName = 'data.sqlite';
 
   DatabaseAdapter? _database;
@@ -1493,7 +1493,8 @@ class SqliteService {
         active_theme TEXT DEFAULT '',
         hide_recent_card INTEGER DEFAULT 0,
         active_sync_provider TEXT DEFAULT 'neosync',
-        systems_version TEXT DEFAULT ''
+        systems_version TEXT DEFAULT '',
+        neostation_app_version TEXT DEFAULT ''
       );
       ''',
       '''
@@ -2188,6 +2189,7 @@ class SqliteService {
     int? hideRecentCard,
     String? activeSyncProvider,
     String? systemsVersion,
+    String? neostationAppVersion,
   }) async {
     final db = await instance.database;
 
@@ -2247,6 +2249,9 @@ class SqliteService {
     }
     if (systemsVersion != null) {
       newConfig['systems_version'] = systemsVersion;
+    }
+    if (neostationAppVersion != null) {
+      newConfig['neostation_app_version'] = neostationAppVersion;
     }
 
     await db.insert(
@@ -2468,6 +2473,17 @@ class SqliteService {
   /// Persists the systems manifest version after a successful update.
   static Future<void> updateSystemsVersion(String version) async {
     await saveUserConfig(systemsVersion: version);
+  }
+
+  /// Retrieves the Neostation app version recorded at last startup.
+  static Future<String> getNeostationAppVersion() async {
+    final config = await getUserConfig();
+    return config?['neostation_app_version']?.toString() ?? '';
+  }
+
+  /// Persists the current Neostation app version.
+  static Future<void> updateNeostationAppVersion(String version) async {
+    await saveUserConfig(neostationAppVersion: version);
   }
 
   /// Updates the video/sound configuration setting.
