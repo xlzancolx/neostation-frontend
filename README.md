@@ -177,6 +177,15 @@ These packages are "vendored" within the /packages directory to ensure long-term
 | `flutter_7zip` | FFI bindings for 7-Zip archive extraction |
 | `flutter_soloud` | Low-level audio playback using the SoLoud engine |
 
+## Systems & Emulator Definitions
+
+NeoStation's system configurations, emulator definitions, and launch arguments are maintained in a separate repository.  
+**If you want to add new emulators, fix launch arguments, or update system configurations, please open a pull request in the dedicated systems repository:**
+
+👉 [**miguelsotobaez/neostation-systems**](https://github.com/miguelsotobaez/neostation-systems)
+
+Changes to these files are not accepted in this frontend repository.
+
 ## Contributing
 
 Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines on bug reports, feature requests, and pull requests.
