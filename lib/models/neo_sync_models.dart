@@ -302,9 +302,6 @@ enum GameSyncStatus {
   /// Local and cloud versions are identical.
   upToDate,
 
-  /// Local and cloud versions differ (collision detected).
-  conflict,
-
   /// A synchronization operation is currently active.
   syncing,
 
@@ -316,6 +313,9 @@ enum GameSyncStatus {
 
   /// Critical emulator components are missing, preventing path resolution.
   missingEmulator,
+
+  /// The last synchronization attempt failed.
+  error,
 }
 
 /// Represents the comprehensive synchronization state of a specific game.
@@ -389,8 +389,6 @@ class GameSyncState {
         return 'Cloud only';
       case GameSyncStatus.upToDate:
         return 'Up to date';
-      case GameSyncStatus.conflict:
-        return 'Conflict';
       case GameSyncStatus.syncing:
         return 'Syncing...';
       case GameSyncStatus.disabled:
@@ -399,6 +397,8 @@ class GameSyncState {
         return 'Quota exceeded';
       case GameSyncStatus.missingEmulator:
         return 'No bin selected';
+      case GameSyncStatus.error:
+        return 'Error';
     }
   }
 
@@ -413,8 +413,6 @@ class GameSyncState {
         return Colors.blue;
       case GameSyncStatus.upToDate:
         return Colors.green;
-      case GameSyncStatus.conflict:
-        return Colors.red;
       case GameSyncStatus.syncing:
         return Colors.blue;
       case GameSyncStatus.disabled:
@@ -423,6 +421,8 @@ class GameSyncState {
         return Colors.red;
       case GameSyncStatus.missingEmulator:
         return Colors.redAccent;
+      case GameSyncStatus.error:
+        return Colors.red;
     }
   }
 }

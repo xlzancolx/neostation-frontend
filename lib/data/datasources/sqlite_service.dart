@@ -1492,7 +1492,8 @@ class SqliteService {
         app_language TEXT DEFAULT 'en',
         active_theme TEXT DEFAULT '',
         hide_recent_card INTEGER DEFAULT 0,
-        active_sync_provider TEXT DEFAULT 'neosync'
+        active_sync_provider TEXT DEFAULT 'neosync',
+        systems_version TEXT DEFAULT ''
       );
       ''',
       '''

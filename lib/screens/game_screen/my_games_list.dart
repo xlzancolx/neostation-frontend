@@ -25,11 +25,9 @@ import '../../providers/file_provider.dart';
 import '../../providers/neo_assets_provider.dart';
 import '../../providers/sqlite_config_provider.dart';
 import '../../providers/sqlite_database_provider.dart';
-import '../../models/neo_sync_models.dart';
 import '../../models/system_model.dart';
 import '../../models/game_model.dart';
 import 'game_details_card/game_details_card_list.dart';
-import 'game_details_card/widgets/conflict_resolution_dialog.dart';
 import 'game_details_card/random_game_dialog.dart';
 import 'music/music_list.dart';
 import 'music/music_player.dart';
@@ -418,7 +416,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
       onFavorite: _toggleFavorite, // Button Y.
       onXButton: _handleXButton, // Button X.
       onSettings: _handleStartButton, // Button Start.
-      onLeftTrigger: _handleConflictResolution, // Resolve metadata conflicts.
+      onLeftTrigger: null,
       onRightTrigger: null,
       onSelectButton: () {
         if (widget.system.folderName == 'music') {
@@ -1546,34 +1544,6 @@ class _SystemGamesListState extends State<SystemGamesList> {
       if (mounted) {
         _gamepadNav.activate();
       }
-    }
-  }
-
-  /// Triggers cloud sync conflict resolution via UI prompts.
-  void _handleConflictResolution() {
-    if (_selectedGame == null) return;
-
-    final syncProvider = context.read<SyncManager>().active!;
-    final gameState = syncProvider.getGameSyncState(_selectedGame!.romname);
-
-    if (gameState != null && gameState.status == GameSyncStatus.conflict) {
-      _gamepadNav.deactivate();
-
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return ConflictResolutionDialog(
-            game: _selectedGame!,
-            gameState: gameState,
-            syncProvider: syncProvider,
-          );
-        },
-      ).then((_) async {
-        if (mounted) {
-          _gamepadNav.activate();
-        }
-      });
     }
   }
 

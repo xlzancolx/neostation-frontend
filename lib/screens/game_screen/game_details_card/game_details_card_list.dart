@@ -10,7 +10,6 @@ import '../../../models/game_model.dart';
 import '../../../providers/file_provider.dart';
 import '../../../providers/retro_achievements_provider.dart';
 import '../../../sync/i_sync_provider.dart';
-import '../../../models/neo_sync_models.dart';
 import '../../../models/retro_achievements_game_info.dart';
 import '../../../repositories/game_repository.dart';
 import '../../../repositories/retro_achievements_repository.dart';
@@ -26,7 +25,6 @@ import '../../../services/android_service.dart';
 import 'package:neostation/services/logger_service.dart';
 import 'package:neostation/widgets/custom_notification.dart';
 import '../../../models/secondary_display_state.dart';
-import 'widgets/conflict_resolution_dialog.dart';
 import 'widgets/game_details_footer.dart';
 import 'widgets/game_details_tabs_header.dart';
 import 'tabs/game_details_general_tab.dart';
@@ -846,9 +844,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
               onToggleFavorite: _toggleFavorite,
               onScrapeGame: _onScrapeGameCompact,
               onShowAchievements: () => _setTab(DetailTab.achievements),
-              onShowConflictDialog: () => _showConflictResolutionDialog(
-                widget.syncProvider.getGameSyncState(_game.romname)!,
-              ),
               hasRetroAchievements: _hasRetroAchievements,
               isLoadingAchievements: _isLoadingAchievements,
               currentGameInfo: _currentGameInfo,
@@ -932,21 +927,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     }
     // Force metadata overwrite if a valid description is already present.
     _startSingleGameScrape(forceOverwrite: !isDescriptionMissing);
-  }
-
-  /// Displays the modal for manual resolution of cloud save synchronization conflicts.
-  void _showConflictResolutionDialog(GameSyncState gameState) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return ConflictResolutionDialog(
-          game: widget.game,
-          gameState: gameState,
-          syncProvider: widget.syncProvider,
-        );
-      },
-    );
   }
 
   /// Renders the background fanart with smooth cross-fades and scale animations.

@@ -34,7 +34,6 @@ class GameDetailsFooter extends StatelessWidget {
   final VoidCallback onToggleFavorite;
   final VoidCallback onScrapeGame;
   final VoidCallback onShowAchievements;
-  final VoidCallback onShowConflictDialog;
   final bool hasRetroAchievements;
   final bool isLoadingAchievements;
   final GameInfoAndUserProgress? currentGameInfo;
@@ -56,7 +55,6 @@ class GameDetailsFooter extends StatelessWidget {
     required this.onToggleFavorite,
     required this.onScrapeGame,
     required this.onShowAchievements,
-    required this.onShowConflictDialog,
     required this.hasRetroAchievements,
     required this.isLoadingAchievements,
     this.currentGameInfo,
@@ -377,7 +375,6 @@ class GameDetailsFooter extends StatelessWidget {
     final gameState = syncProvider.getGameSyncState(game.romname);
     final isSyncing = syncProvider.status == SyncProviderStatus.syncing;
     final isCloudSyncDisabled = cloudSyncEnabled == false;
-    final hasConflict = gameState?.status == GameSyncStatus.conflict;
 
     Color statusColor;
     IconData statusIcon;
@@ -412,11 +409,6 @@ class GameDetailsFooter extends StatelessWidget {
           statusIcon = Icons.cloud_download;
           statusText = AppLocale.download.getString(context);
           break;
-        case GameSyncStatus.conflict:
-          statusColor = Colors.deepOrangeAccent;
-          statusIcon = Icons.warning;
-          statusText = AppLocale.conflict.getString(context);
-          break;
         case GameSyncStatus.syncing:
           statusColor = Colors.lightBlue;
           statusIcon = Icons.sync;
@@ -447,6 +439,11 @@ class GameDetailsFooter extends StatelessWidget {
           statusColor = Colors.orange;
           statusIcon = Icons.videogame_asset_off;
           statusText = AppLocale.noEmulator.getString(context);
+          break;
+        case GameSyncStatus.error:
+          statusColor = Colors.red;
+          statusIcon = Icons.error_outline;
+          statusText = AppLocale.error.getString(context);
           break;
       }
     } else {
@@ -494,7 +491,7 @@ class GameDetailsFooter extends StatelessWidget {
                         },
                       )
                     : Icon(statusIcon, color: statusColor, size: 16.r),
-                if (hasConflict) ...[
+                if (gameState?.status == GameSyncStatus.error) ...[
                   SizedBox(width: 4.r),
                   Image.asset(
                     'assets/images/gamepad/Xbox_L-click.png',
@@ -526,28 +523,6 @@ class GameDetailsFooter extends StatelessWidget {
         ),
       ),
     );
-
-    // If a conflict is detected, the indicator becomes a clickable entry-point for resolution.
-    if (hasConflict && gameState != null) {
-      return ExcludeFocus(
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            canRequestFocus: false,
-            focusColor: Colors.transparent,
-            hoverColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            splashColor: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12.r),
-            onTap: () {
-              SfxService().playNavSound();
-              onShowConflictDialog();
-            },
-            child: neoSyncContent,
-          ),
-        ),
-      );
-    }
 
     return neoSyncContent;
   }

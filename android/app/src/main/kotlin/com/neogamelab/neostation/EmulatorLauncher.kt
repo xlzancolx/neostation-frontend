@@ -124,9 +124,20 @@ object EmulatorLauncher {
                 }?.let { Uri.parse(it["value"].toString()) }
             }
             if (primaryContentUri != null) {
+                // Explicit grantUriPermission is synchronous — the permission exists
+                // before startActivity() is called. FLAG_GRANT_READ_URI_PERMISSION alone
+                // is processed asynchronously by ActivityManager, so on first launch the
+                // emulator can attempt to read the file before the grant arrives → fails.
+                // Second launch works because the permission is already cached.
+                try {
+                    context.grantUriPermission(
+                        packageName,
+                        primaryContentUri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: Exception) { }
+
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                intent.addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
                 if (intent.clipData == null) {
                     intent.clipData = ClipData.newRawUri("ROM", primaryContentUri)
                 }
