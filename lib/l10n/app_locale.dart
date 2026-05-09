@@ -116,6 +116,10 @@ mixin AppLocale {
       'error_configuring_retroarch_path';
   static const String scanOnStartup = 'scan_on_startup';
   static const String scanOnStartupSubtitle = 'scan_on_startup_subtitle';
+  static const String autoUpdateApp = 'auto_update_app';
+  static const String autoUpdateAppSubtitle = 'auto_update_app_subtitle';
+  static const String autoUpdateSystems = 'auto_update_systems';
+  static const String autoUpdateSystemsSubtitle = 'auto_update_systems_subtitle';
   static const String sfxSounds = 'sfx_sounds';
   static const String sfxSoundsSubtitle = 'sfx_sounds_subtitle';
   static const String fullscreenMode = 'fullscreen_mode';
@@ -703,6 +707,13 @@ mixin AppLocale {
   static const String updateDialogError = 'update_dialog_error';
   static const String updateErrorAndroid = 'update_error_android';
   static const String updateErrorDesktop = 'update_error_desktop';
+
+  static const String systemsUpdateAvailable = 'systems_update_available';
+  static const String systemsUpdateCurrentVersion = 'systems_update_current_version';
+  static const String systemsUpdateNewVersion = 'systems_update_new_version';
+  static const String systemsUpdateDownloading = 'systems_update_downloading';
+  static const String systemsUpdateComplete = 'systems_update_complete';
+  static const String systemsUpdateError = 'systems_update_error';
 
   // ---------------------------------------------------------------------------
   // Scraper single-game progress & result messages

@@ -4,9 +4,8 @@ import 'package:neostation/utils/gamepad_nav.dart';
 import 'package:neostation/providers/sqlite_config_provider.dart';
 import 'package:neostation/services/update_service.dart';
 import 'package:neostation/services/systems_update_service.dart';
-import 'package:neostation/data/datasources/sqlite_service.dart';
 import 'package:neostation/widgets/update_dialog.dart';
-import 'package:neostation/widgets/custom_notification.dart';
+import 'package:neostation/widgets/systems_update_dialog.dart';
 import 'package:neostation/services/logger_service.dart';
 import '../widgets/fixed_header.dart';
 import 'systems_screen/system_content.dart';
@@ -122,83 +121,103 @@ class AppScreenState extends State<AppScreen> {
         onDeactivate: () => _gamepadNav.deactivate(),
       );
 
-      _checkForUpdates();
-      _initAndCheckSystemsUpdate();
+      _runUpdateSequence();
     });
 
     // Synchronize theme changes with secondary displays (e.g., dual-screen hardware).
     _themeProvider?.addListener(_onThemeChanged);
   }
 
-  /// Evaluates the availability of software updates, respecting active background tasks.
-  Future<void> _checkForUpdates() async {
+  /// Runs the sequenced update flow: app update first, then systems update.
+  ///
+  /// Defers until any active ROM scan completes to avoid resource contention.
+  Future<void> _runUpdateSequence() async {
     try {
       final configProvider = Provider.of<SqliteConfigProvider>(
         context,
         listen: false,
       );
 
-      // Defer update check if a high-priority ROM scan is currently active.
       if (configProvider.isScanning) {
         void checkScanStatus() {
           if (!configProvider.isScanning && mounted) {
-            _performUpdateCheck();
+            configProvider.removeListener(checkScanStatus);
+            _performUpdateSequence(configProvider);
           }
         }
 
         configProvider.addListener(checkScanStatus);
-
-        // Security fallback: ensure the listener is eventualy detached.
         Future.delayed(const Duration(minutes: 5), () {
           configProvider.removeListener(checkScanStatus);
         });
       } else {
-        _performUpdateCheck();
+        _performUpdateSequence(configProvider);
       }
     } catch (e) {
-      _log.e('AppScreen: Failed to initiate update check', error: e);
+      _log.e('AppScreen: Failed to initiate update sequence', error: e);
     }
   }
 
-  /// Initializes the systems version baseline then checks for GitHub updates.
-  Future<void> _initAndCheckSystemsUpdate() async {
-    // Always runs — ensures systems_version is set in SQLite even without internet.
-    await SystemsUpdateService.initialize();
-    // Then attempt to pull newer configs from GitHub.
-    try {
-      final result = await SystemsUpdateService.checkAndUpdate();
-      if (result != null) {
-        // Re-sync DB with newly downloaded JSON files (covers the case where
-        // the provider was already initialized before this download completed).
-        await SqliteService.loadAndSyncSystems();
-        if (mounted) {
-          AppNotification.showNotification(
-            context,
-            'Systems updated to v${result.newVersion} (${result.filesUpdated} files)',
-            type: NotificationType.success,
-            icon: Icons.system_update_alt,
-          );
-        }
-      }
-    } catch (e) {
-      _log.e('AppScreen: Systems update check failure', error: e);
+  Future<void> _performUpdateSequence(
+    SqliteConfigProvider configProvider,
+  ) async {
+    bool appUpdateShown = false;
+
+    // Step 1: Check for app update (if enabled).
+    if (configProvider.config.autoUpdateApp) {
+      appUpdateShown = await _checkAndShowAppUpdate();
+    }
+
+    // Step 2: Check for systems update only when no app update is pending.
+    if (!appUpdateShown && configProvider.config.autoUpdateSystems) {
+      await _checkAndShowSystemsUpdate();
     }
   }
 
-  /// Executes the version check and renders the update modal if a newer build is found.
-  Future<void> _performUpdateCheck() async {
+  /// Checks for a new app version and shows the update dialog if found.
+  /// Returns true if the dialog was shown.
+  Future<bool> _checkAndShowAppUpdate() async {
     try {
       final updateInfo = await UpdateService.checkForUpdates();
-
       if (updateInfo != null && mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => UpdateDialog(updateInfo: updateInfo),
         );
+        return true;
       }
     } catch (e) {
-      _log.e('AppScreen: Update check failure', error: e);
+      _log.e('AppScreen: App update check failure', error: e);
+    }
+    return false;
+  }
+
+  /// Checks for available systems/emulator config updates and shows the dialog if found.
+  /// If the user confirms and the update succeeds, triggers a full ROM scan.
+  Future<void> _checkAndShowSystemsUpdate() async {
+    try {
+      final updateInfo = await SystemsUpdateService.checkForUpdate();
+      if (updateInfo == null || !mounted) return;
+
+      final updated = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => SystemsUpdateDialog(updateInfo: updateInfo),
+      );
+
+      if (updated == true && mounted) {
+        final configProvider = Provider.of<SqliteConfigProvider>(
+          context,
+          listen: false,
+        );
+        await configProvider.reloadSystemDefinitions();
+        if (mounted && configProvider.hasRomFolder) {
+          configProvider.scanSystems();
+        }
+      }
+    } catch (e) {
+      _log.e('AppScreen: Systems update check failure', error: e);
     }
   }
 

@@ -1,29 +1,32 @@
-import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:neostation/l10n/app_locale.dart';
-import 'package:neostation/services/game_service.dart';
+import 'package:neostation/services/logger_service.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
-import '../services/update_service.dart';
+import 'package:neostation/services/game_service.dart';
+import '../services/systems_update_service.dart';
+import '../data/datasources/sqlite_service.dart';
 import 'custom_notification.dart';
 import 'core_footer.dart';
 
-/// Dialog to prompt user for app update with premium UI
-class UpdateDialog extends StatefulWidget {
-  final UpdateInfo updateInfo;
+class SystemsUpdateDialog extends StatefulWidget {
+  final SystemsUpdateInfo updateInfo;
 
-  const UpdateDialog({super.key, required this.updateInfo});
+  const SystemsUpdateDialog({super.key, required this.updateInfo});
 
   @override
-  State<UpdateDialog> createState() => _UpdateDialogState();
+  State<SystemsUpdateDialog> createState() => _SystemsUpdateDialogState();
 }
 
-class _UpdateDialogState extends State<UpdateDialog> {
+class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
+  String _downloadStatus = '';
   late final GamepadNavigation _gamepadNav;
+
+  static final _log = LoggerService.instance;
 
   @override
   void initState() {
@@ -36,7 +39,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
       if (!mounted) return;
       _gamepadNav.initialize();
       GamepadNavigationManager.pushLayer(
-        'update_dialog',
+        'systems_update_dialog',
         onActivate: () => _gamepadNav.activate(),
         onDeactivate: () => _gamepadNav.deactivate(),
       );
@@ -45,7 +48,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
 
   @override
   void dispose() {
-    GamepadNavigationManager.popLayer('update_dialog');
+    GamepadNavigationManager.popLayer('systems_update_dialog');
     _gamepadNav.dispose();
     super.dispose();
   }
@@ -81,7 +84,6 @@ class _UpdateDialogState extends State<UpdateDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header with Gradient
                 Container(
                   padding: EdgeInsets.symmetric(
                     vertical: 12.r,
@@ -112,7 +114,9 @@ class _UpdateDialogState extends State<UpdateDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              AppLocale.updateAvailable.getString(context),
+                              AppLocale.systemsUpdateAvailable.getString(
+                                context,
+                              ),
                               style: theme.textTheme.titleLarge?.copyWith(
                                 color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.bold,
@@ -120,11 +124,11 @@ class _UpdateDialogState extends State<UpdateDialog> {
                               ),
                             ),
                             Text(
-                              AppLocale.updateVersion
+                              AppLocale.systemsUpdateNewVersion
                                   .getString(context)
                                   .replaceFirst(
                                     '{version}',
-                                    widget.updateInfo.latestVersion,
+                                    widget.updateInfo.remoteVersion,
                                   ),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.colorScheme.onSurface.withValues(
@@ -136,29 +140,6 @@ class _UpdateDialogState extends State<UpdateDialog> {
                           ],
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.r,
-                              vertical: 2.r,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(16.r),
-                            ),
-                            child: Text(
-                              '${widget.updateInfo.fileSizeMB} MB',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
@@ -168,7 +149,6 @@ class _UpdateDialogState extends State<UpdateDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Current version info
                       Row(
                         children: [
                           Icon(
@@ -180,11 +160,13 @@ class _UpdateDialogState extends State<UpdateDialog> {
                           ),
                           SizedBox(width: 6.r),
                           Text(
-                            AppLocale.updateCurrentVersion
+                            AppLocale.systemsUpdateCurrentVersion
                                 .getString(context)
                                 .replaceFirst(
                                   '{version}',
-                                  widget.updateInfo.currentVersion,
+                                  widget.updateInfo.currentVersion.isEmpty
+                                      ? 'bundled'
+                                      : widget.updateInfo.currentVersion,
                                 ),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurface.withValues(
@@ -198,7 +180,6 @@ class _UpdateDialogState extends State<UpdateDialog> {
                       SizedBox(height: 8.r),
 
                       if (_isDownloading) ...[
-                        // Downloading View
                         Column(
                           children: [
                             ClipRRect(
@@ -217,17 +198,19 @@ class _UpdateDialogState extends State<UpdateDialog> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  _downloadProgress >= 1.0
-                                      ? AppLocale.updatePreparingInstall
-                                            .getString(context)
-                                      : AppLocale.updateDownloading.getString(
-                                          context,
-                                        ),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
+                                Expanded(
+                                  child: Text(
+                                    _downloadStatus.isNotEmpty
+                                        ? _downloadStatus
+                                        : AppLocale.systemsUpdateDownloading
+                                              .getString(context),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                SizedBox(width: 8.r),
                                 Text(
                                   '${(_downloadProgress * 100).toStringAsFixed(0)}%',
                                   style: theme.textTheme.bodySmall?.copyWith(
@@ -240,7 +223,6 @@ class _UpdateDialogState extends State<UpdateDialog> {
                           ],
                         ),
                       ] else ...[
-                        // Action Buttons
                         Row(
                           children: [
                             Expanded(
@@ -286,24 +268,43 @@ class _UpdateDialogState extends State<UpdateDialog> {
     setState(() {
       _isDownloading = true;
       _downloadProgress = 0.0;
+      _downloadStatus = '';
     });
 
-    final success = await UpdateService.downloadAndInstall(widget.updateInfo, (
-      progress,
-    ) {
-      if (mounted) setState(() => _downloadProgress = progress);
-    });
+    SystemsUpdateResult? result;
+    try {
+      result = await SystemsUpdateService.checkAndUpdate(
+        onProgress: (progress, status) {
+          if (mounted) {
+            setState(() {
+              _downloadProgress = progress;
+              _downloadStatus = status;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      _log.e('SystemsUpdateDialog: download failed', error: e);
+    }
 
-    if (!success && mounted) {
+    if (!mounted) return;
+
+    if (result != null) {
+      await SqliteService.loadAndSyncSystems();
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+      AppNotification.showNotification(
+        context,
+        AppLocale.systemsUpdateComplete.getString(context),
+        type: NotificationType.success,
+        icon: Icons.system_update_alt,
+      );
+    } else {
       setState(() => _isDownloading = false);
       AppNotification.showNotification(
         context,
-        Platform.isAndroid
-            ? AppLocale.updateErrorAndroid.getString(context)
-            : AppLocale.updateErrorDesktop.getString(context),
+        AppLocale.systemsUpdateError.getString(context),
         type: NotificationType.error,
-        title: AppLocale.updateDialogError.getString(context),
-        duration: const Duration(seconds: 5),
       );
     }
   }

@@ -62,6 +62,12 @@ class ConfigModel {
   /// ID of the active sync provider (matches [ISyncProvider.providerId]).
   final String activeSyncProvider;
 
+  /// Whether to automatically check and prompt for new app versions on startup.
+  final bool autoUpdateApp;
+
+  /// Whether to automatically check and prompt for system/emulator config updates on startup.
+  final bool autoUpdateSystems;
+
   const ConfigModel({
     this.romFolders = const [],
     this.detectedSystems = const [],
@@ -83,6 +89,8 @@ class ConfigModel {
     this.appLanguage = 'es',
     this.hideRecentCard = false,
     this.activeSyncProvider = 'neosync',
+    this.autoUpdateApp = true,
+    this.autoUpdateSystems = true,
   });
 
   /// Convenience getter that returns the primary ROM folder, if any are configured.
@@ -165,6 +173,16 @@ class ConfigModel {
                   json['active_sync_provider'] ??
                   'neosync')
               .toString(),
+      autoUpdateApp:
+          (json['autoUpdateApp'] ?? json['auto_update_app'] ?? 1).toString() ==
+              '1' ||
+          (json['autoUpdateApp'] ?? true).toString().toLowerCase() == 'true',
+      autoUpdateSystems:
+          (json['autoUpdateSystems'] ?? json['auto_update_systems'] ?? 1)
+                  .toString() ==
+              '1' ||
+          (json['autoUpdateSystems'] ?? true).toString().toLowerCase() ==
+              'true',
     );
   }
 
@@ -196,6 +214,8 @@ class ConfigModel {
       'appLanguage': appLanguage,
       'hideRecentCard': hideRecentCard,
       'activeSyncProvider': activeSyncProvider,
+      'autoUpdateApp': autoUpdateApp,
+      'autoUpdateSystems': autoUpdateSystems,
     };
   }
 
@@ -221,6 +241,8 @@ class ConfigModel {
     String? appLanguage,
     bool? hideRecentCard,
     String? activeSyncProvider,
+    bool? autoUpdateApp,
+    bool? autoUpdateSystems,
   }) {
     return ConfigModel(
       romFolders: romFolders ?? this.romFolders,
@@ -243,6 +265,8 @@ class ConfigModel {
       appLanguage: appLanguage ?? this.appLanguage,
       hideRecentCard: hideRecentCard ?? this.hideRecentCard,
       activeSyncProvider: activeSyncProvider ?? this.activeSyncProvider,
+      autoUpdateApp: autoUpdateApp ?? this.autoUpdateApp,
+      autoUpdateSystems: autoUpdateSystems ?? this.autoUpdateSystems,
     );
   }
 

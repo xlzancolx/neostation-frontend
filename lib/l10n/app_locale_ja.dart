@@ -90,6 +90,10 @@ const Map<String, dynamic> appLocaleJa = {
       'RetroArchのパス設定中にエラーが発生しました: {error}',
   AppLocale.scanOnStartup: '起動時にフォルダをスキャン',
   AppLocale.scanOnStartupSubtitle: 'アプリ起動時にROMフォルダを自動的にスキャン',
+  AppLocale.autoUpdateApp: 'アプリの自動更新',
+  AppLocale.autoUpdateAppSubtitle: '起動時に新しいバージョンを確認して更新を提案',
+  AppLocale.autoUpdateSystems: 'システム＆エミュレータを更新',
+  AppLocale.autoUpdateSystemsSubtitle: '起動時にシステムとエミュレータの設定更新を確認',
   AppLocale.sfxSounds: 'インターフェース音',
   AppLocale.sfxSoundsSubtitle: 'コントローラ、キーボード、タッチ操作時の音を再生',
   AppLocale.fullscreenMode: 'フルスクリーンモード',
@@ -623,6 +627,13 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.updateErrorAndroid: 'インストールに失敗しました。提供元不明のアプリの許可を確認してください。',
   AppLocale.updateErrorDesktop:
       'アップデートに失敗しました。後でもう一度試すか、neostation.dev を訪問してください。',
+
+  AppLocale.systemsUpdateAvailable: 'システム更新があります',
+  AppLocale.systemsUpdateCurrentVersion: '現在のバージョン: {version}',
+  AppLocale.systemsUpdateNewVersion: '新しいバージョン: {version}',
+  AppLocale.systemsUpdateDownloading: 'システム設定をダウンロード中...',
+  AppLocale.systemsUpdateComplete: 'システムが正常に更新されました！',
+  AppLocale.systemsUpdateError: 'システムの更新に失敗しました。後でもう一度試してください。',
 
   AppLocale.checkingCredentials: '資格情報を確認中...',
   AppLocale.scrapeNoCredentials: 'ScreenScraperの資格情報が見つかりません。ログインしてください。',

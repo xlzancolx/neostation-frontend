@@ -108,6 +108,12 @@ const Map<String, dynamic> appLocaleFr = {
   AppLocale.scanOnStartup: 'Analyser les dossiers au démarrage',
   AppLocale.scanOnStartupSubtitle:
       'Analyse automatiquement les dossiers de ROMs à l’ouverture de l’application',
+  AppLocale.autoUpdateApp: 'Mise à jour auto - App',
+  AppLocale.autoUpdateAppSubtitle:
+      'Vérifier les nouvelles versions au démarrage et proposer une mise à jour',
+  AppLocale.autoUpdateSystems: 'Mise à jour Systèmes & Émulateurs',
+  AppLocale.autoUpdateSystemsSubtitle:
+      'Vérifier les mises à jour des systèmes et émulateurs au démarrage',
   AppLocale.sfxSounds: 'Sons de l’Interface',
   AppLocale.sfxSoundsSubtitle:
       'Joue des sons pour la navigation à la manette, au clavier et au tactile',
@@ -702,6 +708,14 @@ const Map<String, dynamic> appLocaleFr = {
       'Échec de l’installation. Vérifiez les autorisations d’apps inconnues.',
   AppLocale.updateErrorDesktop:
       'Échec de la mise à jour. Réessayez plus tard ou visitez neostation.dev',
+
+  AppLocale.systemsUpdateAvailable: 'Mise à Jour des Systèmes Disponible',
+  AppLocale.systemsUpdateCurrentVersion: 'Version actuelle : {version}',
+  AppLocale.systemsUpdateNewVersion: 'Nouvelle version : {version}',
+  AppLocale.systemsUpdateDownloading: 'Téléchargement des configs systèmes...',
+  AppLocale.systemsUpdateComplete: 'Systèmes mis à jour avec succès !',
+  AppLocale.systemsUpdateError:
+      'Échec de la mise à jour des systèmes. Réessayez plus tard.',
 
   AppLocale.checkingCredentials: 'Vérification des identifiants...',
   AppLocale.scrapeNoCredentials:

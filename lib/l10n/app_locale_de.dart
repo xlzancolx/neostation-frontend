@@ -103,6 +103,12 @@ const Map<String, dynamic> appLocaleDe = {
   AppLocale.scanOnStartup: 'Ordner beim Start scannen',
   AppLocale.scanOnStartupSubtitle:
       'Scant ROM-Ordner automatisch beim Öffnen der App',
+  AppLocale.autoUpdateApp: 'App automatisch aktualisieren',
+  AppLocale.autoUpdateAppSubtitle:
+      'Beim Start nach neuen App-Versionen suchen und zum Update auffordern',
+  AppLocale.autoUpdateSystems: 'Systeme & Emulatoren aktualisieren',
+  AppLocale.autoUpdateSystemsSubtitle:
+      'Beim Start nach System- und Emulator-Updates suchen',
   AppLocale.sfxSounds: 'Benutzeroberflächen-Sounds',
   AppLocale.sfxSoundsSubtitle:
       'Spielt Sounds für die Navigation mit Controller, Tastatur und Touch ab',
@@ -700,6 +706,13 @@ const Map<String, dynamic> appLocaleDe = {
       'Installation fehlgeschlagen. Überprüfe die Berechtigungen für unbekannte Apps.',
   AppLocale.updateErrorDesktop:
       'Update fehlgeschlagen. Versuche es später erneut oder besuche neostation.dev',
+
+  AppLocale.systemsUpdateAvailable: 'System-Update verfügbar',
+  AppLocale.systemsUpdateCurrentVersion: 'Aktuelle Version: {version}',
+  AppLocale.systemsUpdateNewVersion: 'Neue Version: {version}',
+  AppLocale.systemsUpdateDownloading: 'System-Configs werden heruntergeladen...',
+  AppLocale.systemsUpdateComplete: 'Systeme erfolgreich aktualisiert!',
+  AppLocale.systemsUpdateError: 'Fehler beim Aktualisieren der Systeme. Bitte versuche es später.',
 
   AppLocale.checkingCredentials: 'Anmeldedaten werden überprüft...',
   AppLocale.scrapeNoCredentials:

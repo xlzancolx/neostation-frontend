@@ -141,6 +141,16 @@ class SqliteConfigService {
             1,
         activeSyncProvider:
             userConfig?['active_sync_provider']?.toString() ?? 'neosync',
+        autoUpdateApp:
+            (int.tryParse(userConfig?['auto_update_app']?.toString() ?? '1') ??
+                1) ==
+            1,
+        autoUpdateSystems:
+            (int.tryParse(
+                  userConfig?['auto_update_systems']?.toString() ?? '1',
+                ) ??
+                1) ==
+            1,
       );
     } catch (e) {
       _log.e('Error applying configuration in loadConfig: $e');
@@ -171,6 +181,8 @@ class SqliteConfigService {
         appLanguage: config.appLanguage,
         hideRecentCard: config.hideRecentCard ? 1 : 0,
         activeSyncProvider: config.activeSyncProvider,
+        autoUpdateApp: config.autoUpdateApp ? 1 : 0,
+        autoUpdateSystems: config.autoUpdateSystems ? 1 : 0,
       );
 
       await SqliteService.saveUserRomFolders(config.romFolders);

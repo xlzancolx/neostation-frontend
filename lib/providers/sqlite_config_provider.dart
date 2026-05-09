@@ -57,6 +57,10 @@ class SqliteConfigProvider extends ChangeNotifier {
   /// Human-readable status message for the current scanning phase.
   String _scanStatus = '';
 
+  // Systems download progress
+  final bool _isDownloadingSystems = false;
+  final double _downloadProgress = 0.0;
+
   static final _log = LoggerService.instance;
   static const _secondaryDisplayChannel = MethodChannel(
     'com.neogamelab.neostation/secondary_display',
@@ -102,6 +106,10 @@ class SqliteConfigProvider extends ChangeNotifier {
   double get scanProgress => _scanProgress;
   String get scanStatus => _scanStatus;
 
+  // Getters for systems download progress
+  bool get isDownloadingSystems => _isDownloadingSystems;
+  double get downloadProgress => _downloadProgress;
+
   int get totalGames =>
       _detectedSystems.fold(0, (sum, system) => sum + (system.romCount));
 
@@ -122,12 +130,8 @@ class SqliteConfigProvider extends ChangeNotifier {
       // Initialize the configuration system
       await SqliteConfigService.initialize();
 
-      // Check for system definition updates from GitHub before syncing to DB.
-      // This ensures the scan starts with the latest emulator unique_ids.
+      // Establish the systems version baseline (no download — handled via dialog in app_screen).
       await SystemsUpdateService.initialize();
-      _scanStatus = 'Checking for system updates...';
-      notifyListeners();
-      await SystemsUpdateService.checkAndUpdate();
 
       // CRITICAL: Always reload and sync system JSONs with the database at startup
       // to ensure that new cores or systems modified in assets are reflected,
@@ -1022,6 +1026,17 @@ class SqliteConfigProvider extends ChangeNotifier {
     _availableSystems = await SqliteConfigService.loadAvailableSystems();
   }
 
+  /// Reloads system and emulator definitions from the DB into memory.
+  /// Must be called after external DB updates (e.g., systems update download)
+  /// so the next scan uses the latest definitions.
+  Future<void> reloadSystemDefinitions() async {
+    await Future.wait([
+      _loadAvailableSystems(),
+      _loadAvailableEmulators(),
+    ]);
+    notifyListeners();
+  }
+
   Future<void> _loadHiddenSystems() async {
     try {
       _hiddenSystems = await SystemRepository.getHiddenSystems();
@@ -1225,6 +1240,18 @@ class SqliteConfigProvider extends ChangeNotifier {
         toggleVideoSound();
       }
     }
+  }
+
+  Future<void> updateAutoUpdateApp(bool value) async {
+    _config = _config.copyWith(autoUpdateApp: value);
+    await SqliteConfigService.saveConfig(_config);
+    notifyListeners();
+  }
+
+  Future<void> updateAutoUpdateSystems(bool value) async {
+    _config = _config.copyWith(autoUpdateSystems: value);
+    await SqliteConfigService.saveConfig(_config);
+    notifyListeners();
   }
 
   /// Updates the sorting criteria for the system list.

@@ -243,6 +243,9 @@ class SqliteMigrations {
       case 79:
         await _migrateToVersion79(db);
         break;
+      case 80:
+        await _migrateToVersion80(db);
+        break;
       default:
         _log.w('No migration defined for version $version');
     }
@@ -4169,6 +4172,31 @@ class SqliteMigrations {
       _log.i('Migration v74 completed');
     } catch (e, stackTrace) {
       _log.e('Error in migration v74: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  static Future<void> _migrateToVersion80(Database db) async {
+    _log.i('Migration v80: Add auto_update_app and auto_update_systems to user_config');
+    try {
+      final tableInfo = db.select('PRAGMA table_info(user_config)');
+      final columns = tableInfo.map((c) => c['name'].toString()).toList();
+      if (!columns.contains('auto_update_app')) {
+        db.execute(
+          'ALTER TABLE user_config ADD COLUMN auto_update_app INTEGER DEFAULT 1',
+        );
+        _log.i('Column auto_update_app added to user_config');
+      }
+      if (!columns.contains('auto_update_systems')) {
+        db.execute(
+          'ALTER TABLE user_config ADD COLUMN auto_update_systems INTEGER DEFAULT 1',
+        );
+        _log.i('Column auto_update_systems added to user_config');
+      }
+      _log.i('Migration v80 completed');
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v80: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }

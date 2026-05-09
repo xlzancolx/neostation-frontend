@@ -102,6 +102,12 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.scanOnStartup: 'Сканировать папки при запуске',
   AppLocale.scanOnStartupSubtitle:
       'Автоматически сканировать папки ROM при запуске приложения',
+  AppLocale.autoUpdateApp: 'Авто-обновление приложения',
+  AppLocale.autoUpdateAppSubtitle:
+      'Проверять новые версии при запуске и предлагать обновление',
+  AppLocale.autoUpdateSystems: 'Обновлять системы и эмуляторы',
+  AppLocale.autoUpdateSystemsSubtitle:
+      'Проверять обновления конфигураций систем и эмуляторов при запуске',
   AppLocale.sfxSounds: 'Звуки навигации UI',
   AppLocale.sfxSoundsSubtitle:
       'Воспроизводить звуковые эффекты для геймпада, клавиатуры и сенсорной навигации',
@@ -676,6 +682,13 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.updateErrorAndroid:
       'Установка не удалась. Разрешите установку из неизвестных источников.',
   AppLocale.updateErrorDesktop: 'Ошибка обновления. Посетите neostation.dev',
+
+  AppLocale.systemsUpdateAvailable: 'Доступно обновление систем',
+  AppLocale.systemsUpdateCurrentVersion: 'Текущая версия: {version}',
+  AppLocale.systemsUpdateNewVersion: 'Новая версия: {version}',
+  AppLocale.systemsUpdateDownloading: 'Загрузка конфигураций систем...',
+  AppLocale.systemsUpdateComplete: 'Системы успешно обновлены!',
+  AppLocale.systemsUpdateError: 'Ошибка обновления систем. Попробуйте позже.',
 
   AppLocale.checkingCredentials: 'Проверка учетных данных...',
   AppLocale.scrapeNoCredentials:

@@ -26,6 +26,16 @@ class SystemsUpdateResult {
   });
 }
 
+/// Info returned when a systems update is available but not yet downloaded.
+class SystemsUpdateInfo {
+  final String currentVersion;
+  final String remoteVersion;
+  const SystemsUpdateInfo({
+    required this.currentVersion,
+    required this.remoteVersion,
+  });
+}
+
 /// Service that keeps the bundled system JSON configs up-to-date from the
 /// neostation-systems GitHub repository.
 ///
@@ -83,9 +93,37 @@ class SystemsUpdateService {
     }
   }
 
+  /// Checks the remote manifest and returns [SystemsUpdateInfo] if an update is
+  /// available, without downloading anything.
+  static Future<SystemsUpdateInfo?> checkForUpdate() async {
+    try {
+      final manifest = await _fetchManifest();
+      if (manifest == null) return null;
+
+      final remoteVersion = manifest['latest_version']?.toString() ?? '';
+      if (remoteVersion.isEmpty) return null;
+
+      final localVersion = await SqliteService.getSystemsVersion();
+      if (localVersion == remoteVersion) return null;
+
+      return SystemsUpdateInfo(
+        currentVersion: localVersion,
+        remoteVersion: remoteVersion,
+      );
+    } catch (e) {
+      _log.w('SystemsUpdateService: checkForUpdate error: $e');
+      return null;
+    }
+  }
+
   /// Checks the remote manifest and downloads any updated system files.
   /// Returns a [SystemsUpdateResult] if files were updated, null otherwise.
-  static Future<SystemsUpdateResult?> checkAndUpdate() async {
+  ///
+  /// [onProgress] receives normalized progress (0.0–1.0) and a status string
+  /// after each file is downloaded.
+  static Future<SystemsUpdateResult?> checkAndUpdate({
+    void Function(double progress, String status)? onProgress,
+  }) async {
     try {
       // 1. Fetch manifest — failure here means no internet, bail silently.
       final manifest = await _fetchManifest();
@@ -109,8 +147,10 @@ class SystemsUpdateService {
       // 4. Download each file to the local cache.
       final cacheDir = await _getSystemsCachePath();
       var downloaded = 0;
+      final total = systemIds.length;
 
-      for (final id in systemIds) {
+      for (int i = 0; i < total; i++) {
+        final id = systemIds[i];
         final fileName = '$id.json';
         final url = '$_baseRawUrl/$fileName';
         try {
@@ -127,6 +167,7 @@ class SystemsUpdateService {
         } catch (e) {
           _log.w('SystemsUpdateService: error downloading $fileName: $e');
         }
+        onProgress?.call((i + 1) / total, 'Downloading systems (${ i + 1}/$total)...');
       }
 
       if (downloaded == 0) return null;

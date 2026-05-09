@@ -102,6 +102,12 @@ const Map<String, dynamic> appLocaleId = {
   AppLocale.scanOnStartup: 'Pindai folder saat mulai',
   AppLocale.scanOnStartupSubtitle:
       'Pindai folder ROM secara otomatis saat membuka aplikasi',
+  AppLocale.autoUpdateApp: 'Perbarui App Otomatis',
+  AppLocale.autoUpdateAppSubtitle:
+      'Periksa versi baru saat mulai dan tawarkan pembaruan',
+  AppLocale.autoUpdateSystems: 'Perbarui Sistem & Emulator',
+  AppLocale.autoUpdateSystemsSubtitle:
+      'Periksa pembaruan konfigurasi sistem dan emulator saat mulai',
   AppLocale.sfxSounds: 'Suara Antarmuka',
   AppLocale.sfxSoundsSubtitle:
       'Putar suara untuk navigasi dengan kontroler, keyboard, dan sentuhan',
@@ -680,6 +686,13 @@ const Map<String, dynamic> appLocaleId = {
       'Penginstalan gagal. Periksa izin untuk aplikasi tidak dikenal.',
   AppLocale.updateErrorDesktop:
       'Pembaruan gagal. Coba lagi nanti atau kunjungi neostation.dev',
+
+  AppLocale.systemsUpdateAvailable: 'Pembaruan Sistem Tersedia',
+  AppLocale.systemsUpdateCurrentVersion: 'Versi saat ini: {version}',
+  AppLocale.systemsUpdateNewVersion: 'Versi baru: {version}',
+  AppLocale.systemsUpdateDownloading: 'Mengunduh konfigurasi sistem...',
+  AppLocale.systemsUpdateComplete: 'Sistem berhasil diperbarui!',
+  AppLocale.systemsUpdateError: 'Gagal memperbarui sistem. Coba lagi nanti.',
 
   AppLocale.checkingCredentials: 'Memeriksa kredensial...',
   AppLocale.scrapeNoCredentials:

@@ -421,7 +421,7 @@ class SqliteService {
   SqliteService._internal();
 
   // Database configuration
-  static const int _databaseVersion = 79;
+  static const int _databaseVersion = 80;
   static const String _databaseName = 'data.sqlite';
 
   DatabaseAdapter? _database;
@@ -1494,7 +1494,9 @@ class SqliteService {
         hide_recent_card INTEGER DEFAULT 0,
         active_sync_provider TEXT DEFAULT 'neosync',
         systems_version TEXT DEFAULT '',
-        neostation_app_version TEXT DEFAULT ''
+        neostation_app_version TEXT DEFAULT '',
+        auto_update_app INTEGER DEFAULT 1,
+        auto_update_systems INTEGER DEFAULT 1
       );
       ''',
       '''
@@ -2190,6 +2192,8 @@ class SqliteService {
     String? activeSyncProvider,
     String? systemsVersion,
     String? neostationAppVersion,
+    int? autoUpdateApp,
+    int? autoUpdateSystems,
   }) async {
     final db = await instance.database;
 
@@ -2252,6 +2256,12 @@ class SqliteService {
     }
     if (neostationAppVersion != null) {
       newConfig['neostation_app_version'] = neostationAppVersion;
+    }
+    if (autoUpdateApp != null) {
+      newConfig['auto_update_app'] = autoUpdateApp;
+    }
+    if (autoUpdateSystems != null) {
+      newConfig['auto_update_systems'] = autoUpdateSystems;
     }
 
     await db.insert(
@@ -2504,6 +2514,16 @@ class SqliteService {
   /// Configures whether the application should automatically scan for games on startup.
   static Future<void> updateScanOnStartup(int value) async {
     await saveUserConfig(scanOnStartup: value);
+  }
+
+  /// Updates whether the app should auto-check for new app versions.
+  static Future<void> updateAutoUpdateApp(int value) async {
+    await saveUserConfig(autoUpdateApp: value);
+  }
+
+  /// Updates whether the app should auto-check for systems/emulator config updates.
+  static Future<void> updateAutoUpdateSystems(int value) async {
+    await saveUserConfig(autoUpdateSystems: value);
   }
 
   // ==========================================

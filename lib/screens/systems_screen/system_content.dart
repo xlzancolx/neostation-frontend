@@ -58,7 +58,26 @@ class SystemContent extends StatelessWidget {
                         style: Theme.of(context).textTheme.headlineSmall,
                         textAlign: TextAlign.center,
                       ),
-                      if (configProvider.isScanning) ...[
+                      if (configProvider.isDownloadingSystems) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          '${(configProvider.downloadProgress * 100).toInt()}%',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        LinearProgressIndicator(
+                          value: configProvider.downloadProgress,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          configProvider.scanStatus,
+                          style: Theme.of(context).textTheme.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                      ] else if (configProvider.isScanning) ...[
                         const SizedBox(height: 16),
                         Text(
                           AppLocale.percentageCompleted
@@ -79,6 +98,14 @@ class SystemContent extends StatelessWidget {
                           ).colorScheme.surface,
                         ),
                         const SizedBox(height: 12),
+                        Text(
+                          configProvider.scanStatus,
+                          style: Theme.of(context).textTheme.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                      ] else if (configProvider.isLoading &&
+                          configProvider.scanStatus.isNotEmpty) ...[
+                        const SizedBox(height: 16),
                         Text(
                           configProvider.scanStatus,
                           style: Theme.of(context).textTheme.bodySmall,

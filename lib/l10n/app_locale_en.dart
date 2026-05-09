@@ -98,6 +98,12 @@ const Map<String, dynamic> appLocaleEn = {
   AppLocale.scanOnStartup: 'Scan folders on Startup',
   AppLocale.scanOnStartupSubtitle:
       'Automatically scan ROM folders when the application starts',
+  AppLocale.autoUpdateApp: 'Auto-update App',
+  AppLocale.autoUpdateAppSubtitle:
+      'Check for new app versions on startup and prompt to update',
+  AppLocale.autoUpdateSystems: 'Auto-update Systems & Emulators',
+  AppLocale.autoUpdateSystemsSubtitle:
+      'Check for updated system and emulator configs on startup',
   AppLocale.sfxSounds: 'UI Navigation Sounds',
   AppLocale.sfxSoundsSubtitle:
       'Play sound effects for gamepad, keyboard and touch navigation',
@@ -675,6 +681,13 @@ const Map<String, dynamic> appLocaleEn = {
       'Installation failed. Please ensure you have granted permission to install unknown apps and try again.',
   AppLocale.updateErrorDesktop:
       'Update failed. Please try again later or visit neostation.dev',
+
+  AppLocale.systemsUpdateAvailable: 'Systems Update Available',
+  AppLocale.systemsUpdateCurrentVersion: 'Current version: {version}',
+  AppLocale.systemsUpdateNewVersion: 'New version: {version}',
+  AppLocale.systemsUpdateDownloading: 'Downloading system configs...',
+  AppLocale.systemsUpdateComplete: 'Systems updated successfully!',
+  AppLocale.systemsUpdateError: 'Failed to update systems. Please try again later.',
 
   AppLocale.checkingCredentials: 'Checking credentials...',
   AppLocale.scrapeNoCredentials:
