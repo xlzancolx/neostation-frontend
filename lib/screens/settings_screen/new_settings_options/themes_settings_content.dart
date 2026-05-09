@@ -112,7 +112,7 @@ class ThemesSettingsContentState extends State<ThemesSettingsContent> {
 
   List<String> _getSystemFolderNames() {
     final sqliteProvider = context.read<SqliteConfigProvider>();
-    return sqliteProvider.detectedSystems
+    return sqliteProvider.availableSystems
         .where((s) => s.folderName != 'all-background')
         .map((s) => s.folderName)
         .toList();
