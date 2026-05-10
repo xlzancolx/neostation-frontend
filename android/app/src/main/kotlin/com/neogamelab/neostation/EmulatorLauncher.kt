@@ -7,9 +7,15 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Environment
+import android.provider.OpenableColumns
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 
 object EmulatorLauncher {
+
+    private const val ROM_IMPORT_DIR = "rom_import"
+    private const val MAX_CACHE_AGE_MS = 7 * 24 * 60 * 60 * 1000L // 7 days
+    private const val MAX_ROM_CACHE_SIZE_BYTES = 1024L * 1024L * 1024L // 1GB
 
     fun launchGenericIntent(
         context: Context,
@@ -70,6 +76,16 @@ object EmulatorLauncher {
                         val romPath = value.toString()
                         if (romPath.startsWith("content://")) {
                             resolvedRomPath = resolveSafUriToPath(context, Uri.parse(romPath))
+                            if (resolvedRomPath == null) {
+                                // Network/NAS document providers (e.g., Round Sync, CIFS) cannot be
+                                // resolved to local filesystem paths. RetroArch requires a real path
+                                // to read the ROM, so we copy it to the app's temporary cache.
+                                val romUri = Uri.parse(romPath)
+                                val fileName = getFileNameFromUri(context, romUri) ?: "rom"
+                                cacheContentUriToFile(context, romUri, fileName)?.let {
+                                    resolvedRomPath = it.absolutePath
+                                }
+                            }
                         }
                     }
                 }
@@ -221,6 +237,106 @@ object EmulatorLauncher {
             println("Error resolving URI to path: $e")
         }
         return null
+    }
+
+    private fun getFileNameFromUri(context: Context, uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            context.contentResolver.query(
+                uri,
+                arrayOf(OpenableColumns.DISPLAY_NAME),
+                null, null, null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (idx >= 0) {
+                        result = cursor.getString(idx)
+                    }
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.lastPathSegment
+        }
+        return result
+    }
+
+    private fun cleanupOldCacheFiles(dir: File) {
+        try {
+            val cutoff = System.currentTimeMillis() - MAX_CACHE_AGE_MS
+            dir.listFiles()?.forEach { file ->
+                if (file.isFile && file.lastModified() < cutoff) {
+                    file.delete()
+                }
+            }
+        } catch (_: Exception) { }
+    }
+
+    private fun cacheContentUriToFile(context: Context, uri: Uri, fileName: String): File? {
+        try {
+            val cacheDir = context.externalCacheDir ?: context.cacheDir
+            val importDir = File(cacheDir, ROM_IMPORT_DIR)
+            if (!importDir.exists()) {
+                importDir.mkdirs()
+            }
+
+            cleanupOldCacheFiles(importDir)
+
+            val destFile = File(importDir, fileName)
+
+            // Determine remote file size
+            var remoteSize = -1L
+            context.contentResolver.query(
+                uri,
+                arrayOf(OpenableColumns.SIZE),
+                null, null, null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val idx = cursor.getColumnIndex(OpenableColumns.SIZE)
+                    if (idx >= 0) {
+                        remoteSize = cursor.getLong(idx)
+                    }
+                }
+            }
+            if (remoteSize <= 0) {
+                context.contentResolver.query(
+                    uri,
+                    arrayOf(android.provider.DocumentsContract.Document.COLUMN_SIZE),
+                    null, null, null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val idx = cursor.getColumnIndex(android.provider.DocumentsContract.Document.COLUMN_SIZE)
+                        if (idx >= 0) {
+                            remoteSize = cursor.getLong(idx)
+                        }
+                    }
+                }
+            }
+
+            // Skip copy if we already have an up-to-date cached copy
+            if (destFile.exists() && destFile.length() == remoteSize && remoteSize > 0) {
+                println("Using cached ROM: ${destFile.absolutePath}")
+                return destFile
+            }
+
+            // Guard against filling storage with huge files
+            if (remoteSize > MAX_ROM_CACHE_SIZE_BYTES) {
+                println("ROM too large to cache ($remoteSize bytes), skipping local copy.")
+                return null
+            }
+
+            println("Caching ROM from SAF to local storage: ${destFile.absolutePath}")
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                destFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            println("ROM cached successfully: ${destFile.absolutePath}")
+            return destFile
+        } catch (e: Exception) {
+            println("Error caching content URI to file: $e")
+            return null
+        }
     }
 
     private fun getDefaultLibretroDirectory(retroArchPackage: String): String {
