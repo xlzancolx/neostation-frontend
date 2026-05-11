@@ -27,6 +27,7 @@ import 'package:neostation/services/logger_service.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -333,6 +334,27 @@ void subDisplay() {
   runApp(const SecondaryScreen());
 }
 
+/// Provides MaterialLocalizations as a fallback for locales that Flutter's
+/// global delegates do not support (e.g. zh_Hant). This prevents TextField
+/// and other Material widgets from crashing when MaterialLocalizations.of
+/// returns null.
+class FallbackMaterialLocalizationsDelegate
+    extends LocalizationsDelegate<MaterialLocalizations> {
+  const FallbackMaterialLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => true;
+
+  @override
+  Future<MaterialLocalizations> load(Locale locale) =>
+      GlobalMaterialLocalizations.delegate.load(const Locale('en'));
+
+  @override
+  bool shouldReload(
+    covariant LocalizationsDelegate<MaterialLocalizations> old,
+  ) => false;
+}
+
 class MyApp extends StatefulWidget {
   final FileProvider fileProvider;
   final AuthService authService;
@@ -413,8 +435,10 @@ class _MyAppState extends State<MyApp> {
                       debugShowCheckedModeBanner: false,
                       title: 'NeoStation',
                       locale: _locale,
-                      localizationsDelegates:
-                          FlutterLocalization.instance.localizationsDelegates,
+                      localizationsDelegates: [
+                        const FallbackMaterialLocalizationsDelegate(),
+                        ...FlutterLocalization.instance.localizationsDelegates,
+                      ],
                       supportedLocales:
                           FlutterLocalization.instance.supportedLocales,
                       scrollBehavior: CustomScrollBehavior(),

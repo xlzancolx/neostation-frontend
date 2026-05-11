@@ -740,7 +740,8 @@ mixin AppLocale {
   static const String userDataLocationDefault = 'user_data_location_default';
   static const String selectUserDataFolder = 'select_user_data_folder';
   static const String migratingUserData = 'migrating_user_data';
-  static const String migratingUserDataComplete = 'migrating_user_data_complete';
+  static const String migratingUserDataComplete =
+      'migrating_user_data_complete';
   static const String migratingUserDataError = 'migrating_user_data_error';
   static const String migratingFiles = 'migrating_files';
   static const String restartRequired = 'restart_required';

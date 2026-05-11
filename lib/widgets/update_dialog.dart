@@ -32,13 +32,12 @@ class _UpdateDialogState extends State<UpdateDialog> {
       onSelectItem: () {
         if (!_isDownloading) _startUpdate();
       },
-      onBack: () {
-        if (!_isDownloading) Navigator.of(context).pop(false);
-      },
+      onBack: _closeDialog,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _gamepadNav.initialize();
+      _gamepadNav.activate();
       GamepadNavigationManager.pushLayer(
         'update_dialog',
         onActivate: () => _gamepadNav.activate(),
@@ -49,9 +48,19 @@ class _UpdateDialogState extends State<UpdateDialog> {
 
   @override
   void dispose() {
+    _cleanupGamepad();
+    super.dispose();
+  }
+
+  void _cleanupGamepad() {
     GamepadNavigationManager.popLayer('update_dialog');
     _gamepadNav.dispose();
-    super.dispose();
+  }
+
+  void _closeDialog() {
+    if (_isDownloading) return;
+    _cleanupGamepad();
+    Navigator.of(context).pop(false);
   }
 
   @override

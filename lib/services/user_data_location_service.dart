@@ -88,7 +88,9 @@ class UserDataLocationService {
     );
 
     // If media lives outside user-data dir (Linux/macOS), also migrate it.
-    final mediaIsInsideUserData = sourceMediaPath.startsWith(sourceUserDataPath);
+    final mediaIsInsideUserData = sourceMediaPath.startsWith(
+      sourceUserDataPath,
+    );
     List<String> extraSourceDirs = [];
     if (!mediaIsInsideUserData && await Directory(sourceMediaPath).exists()) {
       final destMediaPath = path.join(destPath, 'media');
@@ -135,12 +137,19 @@ class UserDataLocationService {
     final deleteTotal = files.length + dirs.length;
 
     for (final f in files) {
-      try { await f.delete(); } catch (_) {}
+      try {
+        await f.delete();
+      } catch (_) {}
       deleted++;
-      onProgress?.call(0.5 + 0.5 * deleted / deleteTotal, path.basename(f.path));
+      onProgress?.call(
+        0.5 + 0.5 * deleted / deleteTotal,
+        path.basename(f.path),
+      );
     }
     for (final d in dirs) {
-      try { await d.delete(); } catch (_) {} // skip if unexpectedly non-empty
+      try {
+        await d.delete();
+      } catch (_) {} // skip if unexpectedly non-empty
       deleted++;
       onProgress?.call(0.5 + 0.5 * deleted / deleteTotal, '');
     }

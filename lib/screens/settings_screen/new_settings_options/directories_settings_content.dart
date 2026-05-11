@@ -476,7 +476,9 @@ class DirectoriesSettingsContentState
             borderRadius: BorderRadius.circular(4.r),
             child: LinearProgressIndicator(
               // null = indeterminate while system count not yet known
-              value: provider.totalSystemsToScan > 0 ? provider.scanProgress : null,
+              value: provider.totalSystemsToScan > 0
+                  ? provider.scanProgress
+                  : null,
               minHeight: 6.r,
               backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation<Color>(
@@ -533,8 +535,9 @@ class DirectoriesSettingsContentState
     IconData icon, {
     bool isDestructive = false,
   }) {
-    final color =
-        isDestructive ? theme.colorScheme.error : theme.colorScheme.primary;
+    final color = isDestructive
+        ? theme.colorScheme.error
+        : theme.colorScheme.primary;
     return Container(
       padding: EdgeInsets.all(4.r),
       decoration: BoxDecoration(
@@ -598,8 +601,9 @@ class DirectoriesSettingsContentState
                     );
                   }
 
-                  final navIndex =
-                      visualIndex > 2 ? visualIndex - 1 : visualIndex;
+                  final navIndex = visualIndex > 2
+                      ? visualIndex - 1
+                      : visualIndex;
                   final item = _directoryItems[navIndex];
                   final isSelected =
                       widget.isContentFocused &&
@@ -609,8 +613,8 @@ class DirectoriesSettingsContentState
                   final isUserData = item['action'] == 'user_data';
                   final borderColor = isSelected
                       ? (isRemoveItem
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.primary)
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.primary)
                       : theme.colorScheme.outline.withValues(alpha: 0);
 
                   return Container(
@@ -650,8 +654,8 @@ class DirectoriesSettingsContentState
                                   _iconFor(item['action'] as String),
                                   color: isSelected
                                       ? (isRemoveItem
-                                          ? theme.colorScheme.error
-                                          : theme.colorScheme.primary)
+                                            ? theme.colorScheme.error
+                                            : theme.colorScheme.primary)
                                       : theme.colorScheme.onSurface,
                                   size: 20.r,
                                 ),
@@ -664,21 +668,23 @@ class DirectoriesSettingsContentState
                                       Text(
                                         isRemoveItem
                                             ? (item['title'] as String)
-                                            : (item['title']
-                                                as String)
-                                                .getString(context),
+                                            : (item['title'] as String)
+                                                  .getString(context),
                                         style: theme.textTheme.titleSmall
                                             ?.copyWith(
                                               fontWeight: FontWeight.bold,
-                                              fontSize:
-                                                  isRemoveItem ? 10.r : 12.r,
+                                              fontSize: isRemoveItem
+                                                  ? 10.r
+                                                  : 12.r,
                                               color: isSelected
                                                   ? (isRemoveItem
-                                                      ? theme.colorScheme.error
-                                                      : theme
-                                                          .colorScheme.primary)
-                                                  : theme
-                                                      .colorScheme.onSurface,
+                                                        ? theme
+                                                              .colorScheme
+                                                              .error
+                                                        : theme
+                                                              .colorScheme
+                                                              .primary)
+                                                  : theme.colorScheme.onSurface,
                                               fontFamily: isRemoveItem
                                                   ? 'monospace'
                                                   : null,
@@ -688,15 +694,16 @@ class DirectoriesSettingsContentState
                                       ),
                                       SizedBox(height: 2.r),
                                       Text(
-                                        (item['subtitle'] as String)
-                                            .getString(context),
+                                        (item['subtitle'] as String).getString(
+                                          context,
+                                        ),
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               color: isSelected && isRemoveItem
                                                   ? theme.colorScheme.error
-                                                      .withValues(alpha: 0.7)
+                                                        .withValues(alpha: 0.7)
                                                   : theme.colorScheme.onSurface
-                                                      .withValues(alpha: 0.6),
+                                                        .withValues(alpha: 0.6),
                                               fontSize: 9.r,
                                             ),
                                       ),

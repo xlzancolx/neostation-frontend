@@ -1142,7 +1142,6 @@ class _MySystemsCarouselState extends State<MySystemsCarousel> {
                                 displayFolderName: displayFolderName,
                               ),
                       ),
-
                   ],
                 ),
               ],

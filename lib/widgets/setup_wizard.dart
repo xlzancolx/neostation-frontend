@@ -554,10 +554,7 @@ class _SetupWizardState extends State<SetupWizard> {
                 ? null
                 : () => _selectUserDataLocationWizard(),
             style: OutlinedButton.styleFrom(
-              padding: EdgeInsets.symmetric(
-                horizontal: 16.r,
-                vertical: 10.r,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 16.r, vertical: 10.r),
               side: BorderSide(
                 color: theme.colorScheme.primary.withValues(alpha: 0.5),
               ),
