@@ -2836,7 +2836,7 @@ class _GameListViewState extends State<GameListView>
                                       Icons.favorite,
                                       size: 11.r,
                                       color: isSelected
-                                          ? Colors.white
+                                          ? theme.colorScheme.onPrimary
                                           : Colors.redAccent,
                                     ),
                                   ),
@@ -2853,7 +2853,7 @@ class _GameListViewState extends State<GameListView>
                                             : FontWeight.normal,
                                         fontSize: 11.r,
                                         color: isSelected
-                                            ? Colors.white
+                                            ? theme.colorScheme.onPrimary
                                             : theme.colorScheme.onSurface,
                                         fontFamily: theme
                                             .textTheme

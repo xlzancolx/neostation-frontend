@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:neostation/services/logger_service.dart';
 import 'package:neostation/services/permission_service.dart';
+import 'package:neostation/services/config_service.dart';
+import 'package:neostation/services/user_data_location_service.dart';
 import 'package:neostation/providers/palette_provider.dart';
 import '../providers/sqlite_config_provider.dart';
 import '../utils/gamepad_nav.dart';
@@ -26,7 +29,9 @@ class SetupWizard extends StatefulWidget {
 class _SetupWizardState extends State<SetupWizard> {
   int _currentStep = 0;
   bool _isSelectingFolder = false;
+  bool _isSelectingUserDataFolder = false;
   String? _selectedFolder;
+  String? _selectedUserDataPath;
   SecondaryDisplayState? _secondaryDisplayState;
 
   static final _log = LoggerService.instance;
@@ -46,12 +51,12 @@ class _SetupWizardState extends State<SetupWizard> {
   void _initGamepad() {
     _gamepadNav = GamepadNavigation(
       onSelectItem: () {
-        if (_isSelectingFolder) return;
+        if (_isSelectingFolder || _isSelectingUserDataFolder) return;
 
-        final lastStep = Platform.isAndroid ? 2 : 1;
+        final lastStep = Platform.isAndroid ? 3 : 2;
 
         if (_currentStep == lastStep) {
-          // Last step: A always finishes when scan is done
+          // Last step: A finishes when scan is done.
           final provider = Provider.of<SqliteConfigProvider>(
             context,
             listen: false,
@@ -94,16 +99,14 @@ class _SetupWizardState extends State<SetupWizard> {
   }
 
   void _handleSkip() {
-    // Determine the folder selection step index based on platform
-    final folderStep = Platform.isAndroid ? 1 : 0;
+    // Folder selection step: Android=2, Desktop=1
+    final folderStep = Platform.isAndroid ? 2 : 1;
 
     if (_currentStep == folderStep) {
-      // Skip folder selection -> Advance to Scanning step
-      setState(() {
-        _currentStep++;
-      });
+      // Skip folder selection → Advance to Scanning step.
+      setState(() => _currentStep++);
 
-      // Start initial scan to detect available systems (e.g., Android apps)
+      // Start initial scan to detect available systems (e.g., Android apps).
       final provider = Provider.of<SqliteConfigProvider>(
         context,
         listen: false,
@@ -115,21 +118,16 @@ class _SetupWizardState extends State<SetupWizard> {
   }
 
   void _initializeSteps() {
-    // Step 0 is always permissions on Android
-    if (Platform.isAndroid) {
-      PermissionService.hasAllFilesAccess().then((hasAccess) {
-        if (hasAccess && mounted && _currentStep == 0) {
-          setState(() {
-            _currentStep =
-                1; // Skip to folder selection if permission is already granted
-          });
-        }
-      });
-    }
+    // Load the current user-data path for display in step 0.
+    ConfigService.getUserDataPath().then((p) {
+      if (mounted) setState(() => _selectedUserDataPath = p);
+    });
   }
 
-  int get _totalSteps =>
-      Platform.isAndroid ? 3 : 2; // Permissions, Folder, and Scan (Android)
+  // Step layout:
+  // Android: 0=UserDataLocation, 1=Permissions, 2=FolderSelect, 3=Scanning (4 steps)
+  // Desktop: 0=UserDataLocation, 1=FolderSelect, 2=Scanning (3 steps)
+  int get _totalSteps => Platform.isAndroid ? 4 : 3;
 
   @override
   Widget build(BuildContext context) {
@@ -444,10 +442,23 @@ class _SetupWizardState extends State<SetupWizard> {
   }
 
   Widget _buildStepContent(ThemeData theme) {
+    if (_currentStep == 0) {
+      return _buildUserDataLocationStep(theme);
+    }
+
     if (Platform.isAndroid) {
       switch (_currentStep) {
-        case 0:
+        case 1:
           return _buildPermissionStep(theme);
+        case 2:
+          return _buildFolderSelectionStep(theme);
+        case 3:
+          return _buildScanningStep(theme);
+        default:
+          return Container();
+      }
+    } else {
+      switch (_currentStep) {
         case 1:
           return _buildFolderSelectionStep(theme);
         case 2:
@@ -455,15 +466,187 @@ class _SetupWizardState extends State<SetupWizard> {
         default:
           return Container();
       }
-    } else {
-      switch (_currentStep) {
-        case 0:
-          return _buildFolderSelectionStep(theme);
-        case 1:
-          return _buildScanningStep(theme);
-        default:
-          return Container();
+    }
+  }
+
+  Widget _buildUserDataLocationStep(ThemeData theme) {
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscape = orientation == Orientation.landscape;
+    final iconSize = isLandscape ? 48.r : 80.r;
+    final titleSize = isLandscape ? 14.r : 24.r;
+    final textSize = isLandscape ? 10.r : 14.r;
+
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.folder_special,
+            size: iconSize,
+            color: _selectedUserDataPath != null
+                ? theme.colorScheme.primary
+                : theme.colorScheme.primary.withValues(alpha: 0.6),
+          ),
+          SizedBox(height: isLandscape ? 16.r : 24.r),
+
+          Text(
+            AppLocale.userDataLocation.getString(context),
+            style: TextStyle(
+              fontSize: titleSize,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: isLandscape ? 8.r : 16.r),
+
+          Text(
+            AppLocale.userDataLocationSubtitle.getString(context),
+            style: TextStyle(
+              fontSize: textSize,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              height: 1.3,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          if (_selectedUserDataPath != null) ...[
+            SizedBox(height: isLandscape ? 8.r : 16.r),
+            Container(
+              padding: EdgeInsets.all(10.r),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.folder,
+                    size: 16.r,
+                    color: theme.colorScheme.primary,
+                  ),
+                  SizedBox(width: 8.r),
+                  Expanded(
+                    child: Text(
+                      _selectedUserDataPath!,
+                      style: TextStyle(
+                        fontSize: 11.r,
+                        color: theme.colorScheme.onSurface,
+                        fontFamily: 'monospace',
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          SizedBox(height: isLandscape ? 12.r : 20.r),
+
+          // "Change Location" inline button
+          OutlinedButton(
+            onPressed: _isSelectingUserDataFolder
+                ? null
+                : () => _selectUserDataLocationWizard(),
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16.r,
+                vertical: 10.r,
+              ),
+              side: BorderSide(
+                color: theme.colorScheme.primary.withValues(alpha: 0.5),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            child: _isSelectingUserDataFolder
+                ? SizedBox(
+                    width: 18.r,
+                    height: 18.r,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.r,
+                      color: theme.colorScheme.primary,
+                    ),
+                  )
+                : Text(
+                    AppLocale.selectUserDataFolder.getString(context),
+                    style: TextStyle(
+                      fontSize: textSize,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Opens a folder picker, saves the new user-data path, and reinitializes the DB.
+  Future<void> _selectUserDataLocationWizard() async {
+    setState(() => _isSelectingUserDataFolder = true);
+    _gamepadNav?.deactivate();
+
+    try {
+      String? selected;
+
+      if (Platform.isAndroid) {
+        final isTV = await PermissionService.isTelevision();
+        if (isTV) {
+          if (mounted) selected = await TvDirectoryPicker.show(context);
+        } else {
+          // Regular Android: same SAF picker as ROM folder selection.
+          // Convert content:// URI to real filesystem path for SQLite access.
+          try {
+            final uri = await PermissionService.requestFolderAccess();
+            if (uri != null) {
+              selected = UserDataLocationService.safUriToRealPath(
+                uri.toString(),
+              );
+            }
+          } on PlatformException catch (e) {
+            if (e.code == 'PICKER_FAILED' && mounted) {
+              selected = await TvDirectoryPicker.show(context);
+            }
+          }
+        }
+      } else {
+        selected = await FilePicker.platform.getDirectoryPath(
+          dialogTitle: AppLocale.selectUserDataFolder.getString(context),
+          initialDirectory: _selectedUserDataPath,
+        );
       }
+
+      if (selected == null || !mounted) return;
+
+      // Normalize trailing separator.
+      if (selected.endsWith(Platform.pathSeparator)) {
+        selected = selected.substring(0, selected.length - 1);
+      }
+
+      if (selected == _selectedUserDataPath) return;
+
+      await UserDataLocationService.setCustomPath(selected);
+
+      // Reinitialize the DB at the new path (no data yet on first launch).
+      if (!mounted) return;
+      final configProvider = Provider.of<SqliteConfigProvider>(
+        context,
+        listen: false,
+      );
+      await configProvider.reinitialize();
+
+      if (mounted) setState(() => _selectedUserDataPath = selected);
+    } catch (e) {
+      _log.e('User data location selection failed in wizard: $e');
+    } finally {
+      if (mounted) setState(() => _isSelectingUserDataFolder = false);
+      _gamepadNav?.activate();
     }
   }
 
@@ -712,7 +895,7 @@ class _SetupWizardState extends State<SetupWizard> {
 
   Widget _buildNavigationButtons(ThemeData theme) {
     // The last step is always the scanning step
-    final isInScanningStep = _currentStep == (Platform.isAndroid ? 2 : 1);
+    final isInScanningStep = _currentStep == (Platform.isAndroid ? 3 : 2);
 
     if (isInScanningStep) {
       return Consumer<SqliteConfigProvider>(
@@ -770,7 +953,7 @@ class _SetupWizardState extends State<SetupWizard> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // Skip button (only in folder selection step)
-        if (Platform.isAndroid && _currentStep == 1)
+        if (Platform.isAndroid && _currentStep == 2)
           TextButton(
             onPressed: () => _handleSkip(),
             style: TextButton.styleFrom(
@@ -851,18 +1034,32 @@ class _SetupWizardState extends State<SetupWizard> {
   }
 
   String _getButtonText() {
+    if (_currentStep == 0) return AppLocale.next.getString(context);
     if (Platform.isAndroid) {
-      if (_currentStep == 0) return AppLocale.grantAccess.getString(context);
-      if (_currentStep == 1) return AppLocale.selectFolder.getString(context);
+      if (_currentStep == 1) return AppLocale.grantAccess.getString(context);
+      if (_currentStep == 2) return AppLocale.selectFolder.getString(context);
     } else {
-      if (_currentStep == 0) return AppLocale.selectFolder.getString(context);
+      if (_currentStep == 1) return AppLocale.selectFolder.getString(context);
     }
     return AppLocale.next.getString(context);
   }
 
   Future<void> _handleMainAction() async {
+    // Step 0 (user data location): advance and auto-skip permission step if already granted.
+    if (_currentStep == 0) {
+      setState(() => _currentStep++);
+      if (Platform.isAndroid) {
+        PermissionService.hasAllFilesAccess().then((hasAccess) {
+          if (hasAccess && mounted && _currentStep == 1) {
+            setState(() => _currentStep = 2);
+          }
+        });
+      }
+      return;
+    }
+
     if (Platform.isAndroid) {
-      if (_currentStep == 0) {
+      if (_currentStep == 1) {
         // Deactivate gamepad before opening system settings to prevent key event
         // leakage when the app regains focus after the user grants the permission.
         _gamepadNav?.deactivate();
@@ -870,9 +1067,7 @@ class _SetupWizardState extends State<SetupWizard> {
           final success = await PermissionService.requestAllFilesAccess();
           if (success && mounted) {
             context.read<SqliteConfigProvider>().refreshAllFilesAccess();
-            setState(() {
-              _currentStep++;
-            });
+            setState(() => _currentStep++);
             // Drain any pending key events before re-enabling gamepad input.
             await Future.delayed(const Duration(milliseconds: 600));
             if (mounted) _gamepadNav?.activate();
@@ -883,18 +1078,18 @@ class _SetupWizardState extends State<SetupWizard> {
           _log.e('Error requesting permissions: $e');
           if (mounted) _gamepadNav?.activate();
         }
-      } else if (_currentStep == 1) {
+      } else if (_currentStep == 2) {
         await _selectFolder();
       }
     } else {
-      if (_currentStep == 0) {
+      if (_currentStep == 1) {
         await _selectFolder();
       }
     }
   }
 
   Future<void> _selectFolder() async {
-    final folderStep = Platform.isAndroid ? 1 : 0;
+    final folderStep = Platform.isAndroid ? 2 : 1;
     if (_currentStep != folderStep) return;
 
     // Guard: prevent re-entry and stop gamepad from intercepting picker events

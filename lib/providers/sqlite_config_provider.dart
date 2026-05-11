@@ -206,6 +206,21 @@ class SqliteConfigProvider extends ChangeNotifier {
     }
   }
 
+  /// Closes the current DB and re-initializes from scratch at the (possibly new) path.
+  ///
+  /// Used in the setup wizard when the user picks a custom user-data location
+  /// before any data has been written (first launch only).
+  Future<void> reinitialize() async {
+    await SqliteService.closeDatabase();
+    _initialized = false;
+    _config = ConfigModel.empty;
+    _detectedSystems = [];
+    _scanCompleted = false;
+    _error = null;
+    notifyListeners();
+    await initialize();
+  }
+
   /// Loads initial metadata from the database in a specific priority order.
   Future<void> _loadInitialData() async {
     try {

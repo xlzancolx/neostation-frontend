@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:neostation/services/logger_service.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// Independent service for managing user interface sound effects (SFX).
 ///
@@ -80,9 +82,16 @@ class SfxService {
       _log.i('[SfxService] Initializing...');
 
       if (!SoLoud.instance.isInitialized) {
+        // Pre-create the temp dir SoLoud uses for extracted asset files.
+        // Prevents SoLoudTemporaryFolderFailedException on Android when the
+        // directory isn't fully ready before the first loadAsset() call.
+        try {
+          final tempDir = await getTemporaryDirectory();
+          await Directory(
+            '${tempDir.path}/SoLoudLoader-Temp-Files',
+          ).create(recursive: true);
+        } catch (_) {}
         await SoLoud.instance.init();
-        // Wait for OS-level temporary directory initialization (critical on Android/iOS)
-        await Future.delayed(const Duration(milliseconds: 300));
       }
 
       final allPaths = [..._navSounds, _enterSound, _backSound];

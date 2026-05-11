@@ -64,12 +64,22 @@ class MainActivity: MultiDisplayFlutterActivity(), GamepadsCompatibleActivity {
         super.onLaunchSubScreen(display)
     }
 
+    private fun getUserDataDir(): File {
+        val prefs = getSharedPreferences("FlutterSharedPreferences", android.content.Context.MODE_PRIVATE)
+        val customPath = prefs.getString("flutter.custom_user_data_path", null)
+        return if (!customPath.isNullOrEmpty()) {
+            File(customPath)
+        } else {
+            File(getExternalFilesDir(null), "user-data")
+        }
+    }
+
     private fun isSecondaryDisplayHiddenInDb(): Boolean {
         return try {
-            val dbPath = File(getExternalFilesDir(null), "user-data/data.sqlite").absolutePath
+            val dbPath = File(getUserDataDir(), "data.sqlite").absolutePath
             val dbFile = File(dbPath)
             if (!dbFile.exists()) return false
-            
+
             val db = android.database.sqlite.SQLiteDatabase.openDatabase(dbPath, null, android.database.sqlite.SQLiteDatabase.OPEN_READONLY)
             val cursor = db.rawQuery("SELECT hide_bottom_screen FROM user_config WHERE id = 1", null)
             var hidden = false

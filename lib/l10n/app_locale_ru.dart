@@ -143,7 +143,7 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.exitApplication: 'Выйти из приложения',
   AppLocale.exitConfirmation: 'Вы уверены, что хотите выйти из NeoStation?',
   AppLocale.confirmExit: 'Подтвердить выход',
-  AppLocale.rescanAllFolders: 'Пересканировать все папки',
+  AppLocale.rescanAllFolders: 'Пересканировать все папки ROM',
   AppLocale.rescanAllFoldersSubtitle: 'Вручную искать новые системы и ROM',
   AppLocale.romsFolderSubtitle: 'Добавьте папку, содержащую ваши файлы ROM',
   AppLocale.pressToRemoveFolder:
@@ -701,4 +701,22 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.scrapeUnexpectedError: 'Непредвиденная ошибка при скрапинге.',
   AppLocale.scrapeSuccessful: 'Скрапинг успешно завершен!',
   AppLocale.scrapeErrorGame: 'Ошибка при скрапинге игры.',
+
+  AppLocale.userDataLocation: 'Расположение данных',
+  AppLocale.userDataLocationSubtitle:
+      'Выберите, где хранятся медиафайлы, темы и данные приложения',
+  AppLocale.userDataLocationDefault: 'Стандартное расположение',
+  AppLocale.selectUserDataFolder: 'Выбрать папку данных',
+  AppLocale.migratingUserData: 'Перемещение данных',
+  AppLocale.migratingUserDataComplete: 'Миграция завершена',
+  AppLocale.migratingUserDataError: 'Ошибка миграции',
+  AppLocale.migratingFiles: 'Копирование {current} из {total} файлов...',
+  AppLocale.restartRequired: 'Требуется перезапуск',
+  AppLocale.restartRequiredBody:
+      'NeoStation сейчас закроется. Откройте снова, чтобы использовать новое расположение.',
+  AppLocale.userDataLocationUpdated: 'Расположение данных обновлено',
+  AppLocale.resetToDefault: 'Сбросить до стандартного',
+  AppLocale.romDirectories: 'Директории ROM',
+  AppLocale.addRomFolder: 'Добавить папку ROM',
+  AppLocale.removeRomFolder: 'Удалить',
 };

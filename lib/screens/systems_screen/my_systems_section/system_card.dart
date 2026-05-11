@@ -448,7 +448,7 @@ class _SystemCardState extends State<SystemCard> {
               child: Text(
                 AppLocale.recentBadge.getString(context),
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   fontSize: 10.r,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.2,

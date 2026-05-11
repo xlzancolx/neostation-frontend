@@ -136,7 +136,7 @@ class GamepadControl extends StatelessWidget {
     // Default to a subtle semi-transparent style when no background color is provided.
     final Color buttonBg =
         backgroundColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.1);
-    final Color contentColor = textColor ?? theme.colorScheme.onSurface;
+    final Color contentColor = theme.colorScheme.onPrimary;
 
     return Material(
       color: Colors.transparent,

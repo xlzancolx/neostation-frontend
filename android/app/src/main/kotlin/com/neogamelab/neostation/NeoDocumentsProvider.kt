@@ -44,14 +44,22 @@ class NeoDocumentsProvider : DocumentsProvider() {
     private lateinit var baseDir: File
 
     override fun onCreate(): Boolean {
-        // Point to App-Specific Storage: .../Android/data/com.neogamelab.neostation/files/user-data
-        // This ensures the provider exposes the correct internal directory.
         val context = context ?: return false
-        val root = context.getExternalFilesDir(null) ?: return false
-        
-        baseDir = File(root, "user-data")
-        
-        // Ensure it exists (though Flutter app usually creates it)
+
+        // Respect user-configured custom path stored by Flutter's SharedPreferences.
+        val prefs = context.getSharedPreferences(
+            "FlutterSharedPreferences",
+            android.content.Context.MODE_PRIVATE,
+        )
+        val customPath = prefs.getString("flutter.custom_user_data_path", null)
+
+        baseDir = if (!customPath.isNullOrEmpty()) {
+            File(customPath)
+        } else {
+            val root = context.getExternalFilesDir(null) ?: return false
+            File(root, "user-data")
+        }
+
         if (!baseDir.exists()) {
             baseDir.mkdirs()
         }

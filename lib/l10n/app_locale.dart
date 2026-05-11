@@ -732,6 +732,25 @@ mixin AppLocale {
   static const String scrapeSuccessful = 'scrape_successful';
   static const String scrapeErrorGame = 'scrape_error_game';
 
+  // ---------------------------------------------------------------------------
+  // User data location
+  // ---------------------------------------------------------------------------
+  static const String userDataLocation = 'user_data_location';
+  static const String userDataLocationSubtitle = 'user_data_location_subtitle';
+  static const String userDataLocationDefault = 'user_data_location_default';
+  static const String selectUserDataFolder = 'select_user_data_folder';
+  static const String migratingUserData = 'migrating_user_data';
+  static const String migratingUserDataComplete = 'migrating_user_data_complete';
+  static const String migratingUserDataError = 'migrating_user_data_error';
+  static const String migratingFiles = 'migrating_files';
+  static const String restartRequired = 'restart_required';
+  static const String restartRequiredBody = 'restart_required_body';
+  static const String userDataLocationUpdated = 'user_data_location_updated';
+  static const String resetToDefault = 'reset_to_default';
+  static const String romDirectories = 'rom_directories';
+  static const String addRomFolder = 'add_rom_folder';
+  static const String removeRomFolder = 'remove_rom_folder';
+
   // ==========================================================================
   // Localization Maps
   // ==========================================================================

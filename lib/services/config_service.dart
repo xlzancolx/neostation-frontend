@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:neostation/services/logger_service.dart';
 import '../models/system_model.dart';
 import '../models/config_model.dart';
@@ -30,14 +31,36 @@ class ConfigService {
     return path.dirname(exePath);
   }
 
+  static const String _customPathKey = 'custom_user_data_path';
+
   /// Resolves the absolute path to the user's local data directory.
   ///
+  /// Checks for a user-configured custom path first (stored in SharedPreferences).
+  /// Falls back to the platform default if no custom path is set.
+  static Future<String> getUserDataPath() async {
+    final prefs = await SharedPreferences.getInstance();
+    final customPath = prefs.getString(_customPathKey);
+    if (customPath != null && customPath.isNotEmpty) {
+      final dir = Directory(customPath);
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      return customPath;
+    }
+    return getDefaultUserDataPath();
+  }
+
+  /// Returns the platform default user-data path, ignoring any custom override.
+  static Future<String> getDefaultUserDataPath() async {
+    return _computeDefaultUserDataPath();
+  }
+
   /// Platform-specific strategies:
   /// - Android: Application-specific external storage (`/Android/data/.../files/user-data`).
   /// - macOS: Standard application support directory (`~/Library/Application Support/...`).
   /// - Linux: AppImage-aware persistence or `~/.neostation`.
   /// - Windows: Portable directory relative to the binary.
-  static Future<String> getUserDataPath() async {
+  static Future<String> _computeDefaultUserDataPath() async {
     if (Platform.isAndroid) {
       final externalDir = await getExternalStorageDirectory();
       final dir = externalDir ?? await getApplicationDocumentsDirectory();
@@ -121,10 +144,11 @@ class ConfigService {
 
   /// Resolves the absolute path for storing media assets (thumbnails, videos).
   ///
-  /// On Android, this directory is prioritized for accessibility across different
-  /// storage scopes.
+  /// When a custom user-data path is set, media always lives inside it at `media/`.
+  /// Otherwise falls back to platform-specific defaults.
   static Future<String> getMediaPath() async {
     if (Platform.isAndroid) {
+      // On Android getUserDataPath() already handles the custom override.
       final userDataPath = await getUserDataPath();
       final mediaPath = path.join(userDataPath, 'media');
 
@@ -141,6 +165,13 @@ class ConfigService {
       final directory = await getApplicationDocumentsDirectory();
       return path.join(directory.path, 'media');
     } else {
+      // Check custom path first — media lives inside it when overridden.
+      final prefs = await SharedPreferences.getInstance();
+      final customPath = prefs.getString(_customPathKey);
+      if (customPath != null && customPath.isNotEmpty) {
+        return path.join(customPath, 'media');
+      }
+
       String basePath;
 
       if (Platform.isLinux) {

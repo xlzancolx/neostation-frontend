@@ -95,7 +95,7 @@ class GlassButton extends StatelessWidget {
                         height: 16.r,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          color: theme.colorScheme.tertiary,
+                          color: theme.colorScheme.onSurface,
                         ),
                       )
                     else
@@ -107,7 +107,7 @@ class GlassButton extends StatelessWidget {
                           if (iconData != null)
                             Icon(
                               iconData,
-                              color: iconColor ?? theme.colorScheme.tertiary,
+                              color: iconColor ?? theme.colorScheme.onSurface,
                               size: 16.r,
                             ),
                           if (iconPath != null)
@@ -117,7 +117,7 @@ class GlassButton extends StatelessWidget {
                               height: 16.r,
                               color: isFocused
                                   ? Colors.white
-                                  : theme.colorScheme.tertiary,
+                                  : theme.colorScheme.onSurface,
                             ),
                           if (secondaryIconPath != null) ...[
                             SizedBox(width: 4.r),
@@ -125,7 +125,7 @@ class GlassButton extends StatelessWidget {
                               secondaryIconPath!,
                               width: 16.r,
                               height: 16.r,
-                              color: theme.colorScheme.tertiary,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ],
                         ],
@@ -137,8 +137,10 @@ class GlassButton extends StatelessWidget {
                         color: isEnabled
                             ? (isFocused
                                   ? Colors.white
-                                  : theme.colorScheme.tertiary)
-                            : theme.colorScheme.tertiary.withValues(alpha: 0.5),
+                                  : theme.colorScheme.onSurface)
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
                         fontSize: 8.r,
                         fontWeight: isFocused
                             ? FontWeight.w900

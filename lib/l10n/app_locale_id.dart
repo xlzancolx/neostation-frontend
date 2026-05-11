@@ -140,7 +140,7 @@ const Map<String, dynamic> appLocaleId = {
   AppLocale.exitApplication: 'Keluar dari Aplikasi',
   AppLocale.exitConfirmation: 'Apakah Anda yakin ingin keluar dari NeoStation?',
   AppLocale.confirmExit: 'Konfirmasi Keluar',
-  AppLocale.rescanAllFolders: 'Pindai ulang semua folder',
+  AppLocale.rescanAllFolders: 'Pindai ulang semua folder ROM',
   AppLocale.rescanAllFoldersSubtitle: 'Cari sistem dan ROM baru secara manual',
   AppLocale.romsFolderSubtitle: 'Tambahkan folder yang berisi file ROM Anda',
   AppLocale.pressToRemoveFolder: 'Tekan Konfirmasi untuk menghapus folder ini',
@@ -706,4 +706,22 @@ const Map<String, dynamic> appLocaleId = {
       'Terjadi kesalahan tidak terduga saat melakukan scraping.',
   AppLocale.scrapeSuccessful: 'Scraping berhasil diselesaikan!',
   AppLocale.scrapeErrorGame: 'Kesalahan saat mengambil data game.',
+
+  AppLocale.userDataLocation: 'Lokasi Data',
+  AppLocale.userDataLocationSubtitle:
+      'Pilih di mana media, tema, dan data aplikasi disimpan',
+  AppLocale.userDataLocationDefault: 'Lokasi default',
+  AppLocale.selectUserDataFolder: 'Pilih Folder Data',
+  AppLocale.migratingUserData: 'Memindahkan Data',
+  AppLocale.migratingUserDataComplete: 'Migrasi selesai',
+  AppLocale.migratingUserDataError: 'Migrasi gagal',
+  AppLocale.migratingFiles: 'Menyalin {current} dari {total} file...',
+  AppLocale.restartRequired: 'Restart Diperlukan',
+  AppLocale.restartRequiredBody:
+      'NeoStation akan ditutup sekarang. Buka kembali untuk menggunakan lokasi baru.',
+  AppLocale.userDataLocationUpdated: 'Lokasi data diperbarui',
+  AppLocale.resetToDefault: 'Setel Ulang ke Default',
+  AppLocale.romDirectories: 'Direktori ROM',
+  AppLocale.addRomFolder: 'Tambah Folder ROM',
+  AppLocale.removeRomFolder: 'Hapus',
 };

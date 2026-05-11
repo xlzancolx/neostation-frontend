@@ -9,7 +9,7 @@ const Color _onTertiaryColor = Color(0xFF2E3440);
 const Color _surfaceColor = Color(0xFF3B4252);
 const Color _onSurfaceColor = Color(0xFFD8DEE9);
 const Color _errorColor = Color(0xFFBF616A);
-const Color _onErrorColor = Color(0xFFECEFF4);
+const Color _onErrorColor = Color(0xFF2E3440);
 const Color _outlineColor = Color(0xFF4C566A);
 const Color _shadowColor = Color(0xFF000000);
 

@@ -30,7 +30,7 @@ class GamepadFooter extends CoreFooter {
         iconPath: 'assets/images/gamepad/Xbox_Menu_button.png',
         label: AppLocale.hintSettings.getString(context),
         backgroundColor: theme.colorScheme.tertiary,
-        textColor: theme.colorScheme.onTertiary,
+        textColor: theme.colorScheme.onPrimary,
       ),
       SizedBox(width: 8.r),
       GamepadControl(

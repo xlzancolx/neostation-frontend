@@ -69,12 +69,8 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
         child: Container(
           width: 420.r,
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(alpha: 0.85),
+            color: theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.3),
-              width: 1.r,
-            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.5),
@@ -94,16 +90,14 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
                     horizontal: 16.r,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    color: theme.colorScheme.surface.withValues(alpha: 0.95),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: EdgeInsets.all(8.r),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.1,
-                          ),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Icon(
@@ -135,9 +129,7 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
                                     widget.updateInfo.remoteVersion,
                                   ),
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.7,
-                                ),
+                                color: theme.colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -158,9 +150,7 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
                           Icon(
                             Icons.info_outline,
                             size: 12.r,
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.5,
-                            ),
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                           SizedBox(width: 6.r),
                           Text(
@@ -173,9 +163,7 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
                                       : widget.updateInfo.currentVersion,
                                 ),
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -191,8 +179,7 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
                               child: LinearProgressIndicator(
                                 value: _downloadProgress,
                                 minHeight: 8.r,
-                                backgroundColor: theme.colorScheme.primary
-                                    .withValues(alpha: 0.1),
+                                backgroundColor: theme.colorScheme.surfaceContainerHighest,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   theme.colorScheme.primary,
                                 ),
@@ -237,10 +224,8 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
                                 onTap: () => Navigator.of(context).pop(false),
                                 backgroundColor: theme
                                     .colorScheme
-                                    .surfaceContainerHighest
-                                    .withValues(alpha: 0.5),
-                                textColor: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.8),
+                                    .surfaceContainerHighest,
+                                textColor: theme.colorScheme.onSurface,
                               ),
                             ),
                             SizedBox(width: 8.r),

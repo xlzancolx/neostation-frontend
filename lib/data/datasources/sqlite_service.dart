@@ -1908,6 +1908,7 @@ class SqliteService {
       await _database!.close();
       _database = null;
       _initialized = false;
+      _initCompleter = null; // Allow fresh initialization after close.
     }
   }
 

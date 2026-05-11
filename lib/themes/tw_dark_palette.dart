@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 const Color _primaryColor = Color(0xFFDD4C13);
-const Color _onPrimaryColor = Color(0xFFFFFFFF);
+const Color _onPrimaryColor = Color(0xFF1E1E1E);
 const Color _secondaryColor = Color(0xFFFF9100);
 const Color _onSecondaryColor = Color(0xFF000000);
 const Color _tertiaryColor = Color(0xFFEBD7D3);
@@ -9,7 +9,7 @@ const Color _onTertiaryColor = Color(0xFFDD4C13);
 const Color _surfaceColor = Color(0xFF1E1E1E);
 const Color _onSurfaceColor = Color(0xFFEBD7D3);
 const Color _errorColor = Color(0xFFFF5252);
-const Color _onErrorColor = Color(0xFFFFFFFF);
+const Color _onErrorColor = Color(0xFF2E084D);
 const Color _outlineColor = Color(0xFF333333);
 const Color _shadowColor = Color(0xFF000000);
 

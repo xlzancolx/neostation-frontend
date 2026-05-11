@@ -143,7 +143,7 @@ const Map<String, dynamic> appLocaleIt = {
   AppLocale.exitApplication: 'Esci dall’Applicazione',
   AppLocale.exitConfirmation: 'Sei sicuro di voler uscire da NeoStation ?',
   AppLocale.confirmExit: 'Conferma Uscita',
-  AppLocale.rescanAllFolders: 'Scansiona di nuovo tutte le cartelle',
+  AppLocale.rescanAllFolders: 'Scansiona di nuovo tutte le cartelle ROM',
   AppLocale.rescanAllFoldersSubtitle: 'Cerca manualmente nuovi sistemi e ROM',
   AppLocale.romsFolderSubtitle:
       'Aggiungi le cartelle che contengono i tuoi file ROM',
@@ -723,4 +723,22 @@ const Map<String, dynamic> appLocaleIt = {
       'Si è verificato un errore inaspettato durante lo scraping.',
   AppLocale.scrapeSuccessful: 'Scraping completato con successo !',
   AppLocale.scrapeErrorGame: 'Errore durante il recupero dei dati del gioco.',
+
+  AppLocale.userDataLocation: 'Posizione dei dati',
+  AppLocale.userDataLocationSubtitle:
+      'Scegli dove vengono archiviati i media, i temi e i dati dell\'app',
+  AppLocale.userDataLocationDefault: 'Posizione predefinita',
+  AppLocale.selectUserDataFolder: 'Seleziona cartella dati',
+  AppLocale.migratingUserData: 'Spostamento dati',
+  AppLocale.migratingUserDataComplete: 'Migrazione completata',
+  AppLocale.migratingUserDataError: 'Migrazione fallita',
+  AppLocale.migratingFiles: 'Copia di {current} su {total} file...',
+  AppLocale.restartRequired: 'Riavvio richiesto',
+  AppLocale.restartRequiredBody:
+      'NeoStation verrà chiuso ora. Riaprilo per utilizzare la nuova posizione.',
+  AppLocale.userDataLocationUpdated: 'Posizione dati aggiornata',
+  AppLocale.resetToDefault: 'Ripristina predefinito',
+  AppLocale.romDirectories: 'Directory ROM',
+  AppLocale.addRomFolder: 'Aggiungi cartella ROM',
+  AppLocale.removeRomFolder: 'Rimuovi',
 };

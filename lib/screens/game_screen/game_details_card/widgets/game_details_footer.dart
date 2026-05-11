@@ -110,17 +110,16 @@ class GameDetailsFooter extends StatelessWidget {
                                 shadows: [
                                   Shadow(
                                     blurRadius: 2.r,
-                                    color: Colors.black.withValues(alpha: 0.5),
-                                    offset: const Offset(4, 4),
+                                    color: Colors.black,
+                                    offset: const Offset(0, 0),
                                   ),
                                 ],
                               ),
                             ),
                             if (game.showRomFileNameSubtitle) ...[
-                              SizedBox(height: 2.r),
                               Text(
                                 game.romname,
-                                maxLines: 2,
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.72),
@@ -223,7 +222,7 @@ class GameDetailsFooter extends StatelessWidget {
       iconData: isFav ? Icons.favorite : Icons.favorite_border,
       iconColor: isFav
           ? Colors.redAccent
-          : Theme.of(context).colorScheme.tertiary,
+          : Theme.of(context).colorScheme.onSurface,
       label: isFav
           ? AppLocale.favorite.getString(context)
           : AppLocale.addFav.getString(context),
@@ -243,16 +242,9 @@ class GameDetailsFooter extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           height: 40.r,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                isFocused
-                    ? Colors.greenAccent.shade400
-                    : const Color(0xFF2ECC71),
-                isFocused ? const Color(0xFF27AE60) : const Color(0xFF1E8449),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: isFocused
+                ? const Color(0xFF36F184)
+                : const Color(0xFF2ECC71),
             borderRadius: BorderRadius.circular(8.r),
             boxShadow: [
               BoxShadow(
@@ -284,7 +276,7 @@ class GameDetailsFooter extends StatelessWidget {
                       'assets/images/gamepad/Xbox_A_button.png',
                       width: 22.r,
                       height: 22.r,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     SizedBox(width: 8.r),
                     Column(
@@ -294,25 +286,20 @@ class GameDetailsFooter extends StatelessWidget {
                         Text(
                           AppLocale.playButton.getString(context),
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontWeight: FontWeight.w900,
                             fontSize: 14.r,
                             letterSpacing: 1.5,
                             height: 1.0,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                offset: const Offset(0, 1),
-                                blurRadius: 2.r,
-                              ),
-                            ],
                           ),
                         ),
                         if (playTimeText.isNotEmpty && playTimeText != '0s')
                           Text(
                             playTimeText.toUpperCase(),
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimary.withValues(alpha: 0.8),
                               fontSize: 8.r,
                               fontWeight: FontWeight.bold,
                               height: 1.2,
@@ -395,7 +382,7 @@ class GameDetailsFooter extends StatelessWidget {
     } else if (gameState != null) {
       switch (gameState.status) {
         case GameSyncStatus.upToDate:
-          statusColor = Colors.lightGreen;
+          statusColor = const Color(0xFF79AA41);
           statusIcon = Icons.check_circle_outline;
           statusText = AppLocale.synced.getString(context);
           break;
@@ -497,10 +484,10 @@ class GameDetailsFooter extends StatelessWidget {
                     'assets/images/gamepad/Xbox_L-click.png',
                     width: 16.r,
                     height: 16.r,
-                    color: Theme.of(context).colorScheme.tertiary,
+                    color: Theme.of(context).colorScheme.onSurface,
                     errorBuilder: (context, error, stackTrace) => Icon(
                       Icons.radio_button_checked,
-                      color: Theme.of(context).colorScheme.tertiary,
+                      color: Theme.of(context).colorScheme.onSurface,
                       size: 16.r,
                     ),
                   ),
@@ -511,7 +498,7 @@ class GameDetailsFooter extends StatelessWidget {
             Text(
               statusText.toUpperCase(),
               style: TextStyle(
-                color: Theme.of(context).colorScheme.tertiary,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 8.r,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
@@ -543,7 +530,7 @@ class GameDetailsFooter extends StatelessWidget {
 
     final theme = Theme.of(context);
     final Color statusColor = noAchievements
-        ? theme.colorScheme.tertiary
+        ? theme.colorScheme.onSurface
         : Colors.orange;
 
     return Material(
@@ -583,7 +570,7 @@ class GameDetailsFooter extends StatelessWidget {
                     height: 16.r,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: theme.colorScheme.tertiary,
+                      color: theme.colorScheme.onSurface,
                     ),
                   )
                 else
@@ -592,7 +579,7 @@ class GameDetailsFooter extends StatelessWidget {
                 Text(
                   progressText.toUpperCase(),
                   style: TextStyle(
-                    color: theme.colorScheme.tertiary,
+                    color: theme.colorScheme.onSurface,
                     fontSize: 8.r,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
@@ -627,7 +614,7 @@ class _SteamStyleRating extends StatelessWidget {
     )!;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
+      padding: EdgeInsets.symmetric(horizontal: 10.r, vertical: 6.r),
       decoration: BoxDecoration(
         color: Colors.black87,
         borderRadius: BorderRadius.circular(6.r),
@@ -642,13 +629,13 @@ class _SteamStyleRating extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.star, color: ratingColor, size: 20.r),
-          SizedBox(width: 4.r),
+          Icon(Icons.star, color: ratingColor, size: 24.r),
+          SizedBox(width: 6.r),
           Text(
             ratingValue.toStringAsFixed(1),
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16.r,
+              fontSize: 20.r,
               fontWeight: FontWeight.w600,
             ),
           ),
