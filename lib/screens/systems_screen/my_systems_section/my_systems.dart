@@ -77,16 +77,34 @@ class MySystems extends StatelessWidget {
           // Dynamically toggle between Carousel and Grid layouts based on user preference.
           final Widget systemsWidget;
           if (configProvider.config.systemViewMode == 'carousel') {
-            systemsWidget = Padding(
-              padding: EdgeInsets.only(
-                right: 0.0.r,
-                top: 42.r, // Margin adjustment to clear the FixedHeader.
-                bottom: 0.0.r,
-              ),
-              child: MySystemsCarousel(
-                selectedIndex: selectedIndex,
-                onCardTapped: onCardTapped,
-              ),
+            final allSystems = _buildAllSystems(context, configProvider);
+            final currentSystem = selectedIndex < allSystems.length
+                ? allSystems[selectedIndex]
+                : allSystems[0];
+
+            systemsWidget = Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 42.r),
+                    child: MySystemsCarousel(
+                      selectedIndex: selectedIndex,
+                      onCardTapped: onCardTapped,
+                    ),
+                  ),
+                ),
+                SystemsGridFooter(
+                  system: currentSystem,
+                  onEnter: () {
+                    SfxService().playEnterSound();
+                    _navigateToSystem(context, currentSystem, configProvider);
+                  },
+                  onSettings: () {
+                    SfxService().playEnterSound();
+                    _openSystemSettings(context, currentSystem, configProvider);
+                  },
+                ),
+              ],
             );
           } else {
             systemsWidget = _buildSystemsGrid(context, configProvider);
@@ -325,15 +343,14 @@ class MySystems extends StatelessWidget {
     );
   }
 
-  /// Builds the high-density grid layout for system selection.
-  Widget _buildSystemsGrid(
+  /// Aggregates all logical systems (recent games + detected systems) into a unified list.
+  List<SystemInfo> _buildAllSystems(
     BuildContext context,
     SqliteConfigProvider configProvider,
   ) {
     final dbProvider = Provider.of<SqliteDatabaseProvider>(context);
     final fileProvider = Provider.of<FileProvider>(context, listen: false);
 
-    // 1. Resolve Recent Games entries.
     const count = 1;
     final hideRecent = configProvider.config.hideRecentCard;
     final recentDbGames = hideRecent
@@ -347,16 +364,13 @@ class MySystems extends StatelessWidget {
 
     final hiddenFolders = configProvider.hiddenSystemFolders;
 
-    // 2. Aggregate all logical systems into a unified list.
-    final allSystems = [
-      ...recentGames, // Priority display for recently played titles.
-      // Map detected physical systems to localized UI models.
+    return [
+      ...recentGames,
       ...configProvider.detectedSystems
           .where((s) => !hiddenFolders.contains(s.folderName))
           .map((system) {
             final info = SystemInfo.fromSystemMetadata(system);
 
-            // Apply specialized metadata formatting for virtual collections.
             if (system.folderName == 'all') {
               return info.copyWith(
                 numOfRoms: configProvider.totalGames,
@@ -377,6 +391,14 @@ class MySystems extends StatelessWidget {
             return info;
           }),
     ];
+  }
+
+  /// Builds the high-density grid layout for system selection.
+  Widget _buildSystemsGrid(
+    BuildContext context,
+    SqliteConfigProvider configProvider,
+  ) {
+    final allSystems = _buildAllSystems(context, configProvider);
 
     // Bound check the selected index for safety.
     final currentSystem = selectedIndex < allSystems.length

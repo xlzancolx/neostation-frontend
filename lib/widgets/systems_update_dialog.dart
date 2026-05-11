@@ -97,7 +97,9 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
                       Container(
                         padding: EdgeInsets.all(8.r),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Icon(
@@ -179,7 +181,8 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
                               child: LinearProgressIndicator(
                                 value: _downloadProgress,
                                 minHeight: 8.r,
-                                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                                backgroundColor:
+                                    theme.colorScheme.surfaceContainerHighest,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   theme.colorScheme.primary,
                                 ),
@@ -222,9 +225,7 @@ class _SystemsUpdateDialogState extends State<SystemsUpdateDialog> {
                                     'assets/images/gamepad/Xbox_B_button.png',
                                 label: AppLocale.updateLater.getString(context),
                                 onTap: () => Navigator.of(context).pop(false),
-                                backgroundColor: theme
-                                    .colorScheme
-                                    .surfaceContainerHighest,
+                                backgroundColor: theme.colorScheme.tertiary,
                                 textColor: theme.colorScheme.onSurface,
                               ),
                             ),

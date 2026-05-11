@@ -2940,8 +2940,8 @@ class _SystemEmulatorSettingsDialogState
                 GamepadControl(
                   iconPath: 'assets/images/gamepad/Xbox_D-pad_ALL.png',
                   label: AppLocale.navigate.getString(context),
-                  backgroundColor: theme.colorScheme.surface,
-                  textColor: theme.colorScheme.onSurface,
+                  backgroundColor: theme.colorScheme.tertiary,
+                  textColor: theme.colorScheme.onPrimary,
                 ),
               ],
             ),

@@ -17,12 +17,14 @@ class GamepadFooter extends CoreFooter {
       GamepadControl(
         iconPath: 'assets/images/gamepad/Xbox_D-pad_ALL.png',
         label: AppLocale.hintNavigate.getString(context),
+        backgroundColor: theme.colorScheme.tertiary,
+        textColor: theme.colorScheme.onPrimary,
       ),
       SizedBox(width: 8.r),
       GamepadControl(
         iconPath: 'assets/images/gamepad/Xbox_A_button.png',
         label: AppLocale.hintSelect.getString(context),
-        textColor: Colors.white,
+        textColor: theme.colorScheme.onPrimary,
         backgroundColor: const Color(0xFF2ECC71),
       ),
       SizedBox(width: 8.r),
