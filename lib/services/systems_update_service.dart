@@ -55,6 +55,22 @@ class SystemsUpdateService {
   /// Returns the path to the local systems cache directory.
   static Future<String> getCacheDir() async => _getSystemsCachePath();
 
+  /// Deletes all cached system JSON files so bundled assets take precedence.
+  static Future<void> _clearSystemsCache() async {
+    try {
+      final cacheDir = Directory(await _getSystemsCachePath());
+      if (!await cacheDir.exists()) return;
+      await for (final entity in cacheDir.list()) {
+        if (entity is File && entity.path.endsWith('.json')) {
+          await entity.delete();
+        }
+      }
+      _log.i('SystemsUpdateService: cleared systems cache');
+    } catch (e) {
+      _log.w('SystemsUpdateService: failed to clear systems cache: $e');
+    }
+  }
+
   /// Returns the path to a cached system file, or null if not cached.
   static Future<String?> getCachedSystemPath(String jsonFileName) async {
     try {
@@ -73,42 +89,56 @@ class SystemsUpdateService {
   /// resets `systems_version` so `checkAndUpdate` forces a re-download and
   /// `loadAndSyncSystems` re-applies all bundled/cached JSON definitions.
   static Future<void> initialize() async {
+    // Step 1: always check bundled vs cached — independent of app version tracking.
+    await _syncBundledVersion();
+
+    // Step 2: track app version changes (best-effort).
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentAppVersion = packageInfo.version;
       final storedAppVersion = await SqliteService.getNeostationAppVersion();
-
       if (storedAppVersion != currentAppVersion) {
         _log.i(
           'SystemsUpdateService: app updated $storedAppVersion → $currentAppVersion',
         );
-
-        final bundledVersion = await _readBundledManifestVersion();
-        final cachedVersion = await SqliteService.getSystemsVersion();
-
-        // Only advance the baseline if the bundled systems are newer than what
-        // the user already has cached. A stale bundle must never downgrade
-        // systems that were downloaded from the remote repo.
-        if (bundledVersion.isNotEmpty &&
-            !_meetsMinimumVersion(cachedVersion, bundledVersion)) {
-          _log.i(
-            'SystemsUpdateService: bundled v$bundledVersion > cached "$cachedVersion", advancing baseline',
-          );
-          await SqliteService.updateSystemsVersion(bundledVersion);
-        }
-
         await SqliteService.updateNeostationAppVersion(currentAppVersion);
       }
+    } catch (e) {
+      _log.w('SystemsUpdateService: failed to track app version: $e');
+    }
+  }
 
-      final current = await SqliteService.getSystemsVersion();
-      if (current.isEmpty) {
-        final bundledVersion = await _readBundledManifestVersion();
-        final baseline = bundledVersion.isNotEmpty ? bundledVersion : 'bundled';
-        await SqliteService.updateSystemsVersion(baseline);
-        _log.i('SystemsUpdateService: initialized systems_version=$baseline');
+  /// Compares the bundled manifest version against the stored systems version.
+  /// If bundled is newer, clears stale cache and advances the DB baseline so
+  /// loadSystems() uses the newer bundled assets on next load.
+  static Future<void> _syncBundledVersion() async {
+    try {
+      final bundledVersion = await _readBundledManifestVersion();
+      final cachedVersion = await SqliteService.getSystemsVersion();
+
+      _log.i(
+        'SystemsUpdateService: bundled=$bundledVersion cached=$cachedVersion',
+      );
+
+      if (bundledVersion.isEmpty) return;
+
+      if (cachedVersion.isEmpty) {
+        await SqliteService.updateSystemsVersion(bundledVersion);
+        _log.i(
+          'SystemsUpdateService: initialized systems_version=$bundledVersion',
+        );
+        return;
+      }
+
+      if (!_meetsMinimumVersion(cachedVersion, bundledVersion)) {
+        _log.i(
+          'SystemsUpdateService: bundled v$bundledVersion > cached "$cachedVersion", clearing cache',
+        );
+        await _clearSystemsCache();
+        await SqliteService.updateSystemsVersion(bundledVersion);
       }
     } catch (e) {
-      _log.w('SystemsUpdateService: failed to initialize version: $e');
+      _log.w('SystemsUpdateService: _syncBundledVersion error: $e');
     }
   }
 
