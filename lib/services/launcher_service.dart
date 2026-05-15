@@ -358,7 +358,10 @@ class LauncherService {
       // EmulatorLauncher detects these prefixes and resolves SAF content:// at
       // launch time — no package-name checks needed in the launcher.
       result = result.replaceAll('{file.path}', 'neostation-realpath:$romPath');
-      result = result.replaceAll('{file.localuri}', 'neostation-localuri:$romPath');
+      result = result.replaceAll(
+        '{file.localuri}',
+        'neostation-localuri:$romPath',
+      );
 
       // {file.uri}: content:// and file:// pass through; bare paths → file://.
       final String uri =

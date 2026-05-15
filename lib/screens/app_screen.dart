@@ -165,7 +165,9 @@ class AppScreenState extends State<AppScreen> {
     }
 
     final startupScanPending = configProvider.consumeStartupScan();
-    if ((systemsUpdated || startupScanPending) && configProvider.hasRomFolder && mounted) {
+    if ((systemsUpdated || startupScanPending) &&
+        configProvider.hasRomFolder &&
+        mounted) {
       configProvider.scanSystems();
     }
   }
