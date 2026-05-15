@@ -136,7 +136,7 @@ class SystemsUpdateService {
       if (remoteVersion.isEmpty) return null;
 
       final localVersion = await SqliteService.getSystemsVersion();
-      if (localVersion == remoteVersion) return null;
+      if (_meetsMinimumVersion(localVersion, remoteVersion)) return null;
 
       return SystemsUpdateInfo(
         currentVersion: localVersion,
@@ -168,7 +168,7 @@ class SystemsUpdateService {
 
       // 2. Compare with locally stored version.
       final localVersion = await SqliteService.getSystemsVersion();
-      if (localVersion == remoteVersion) return null;
+      if (_meetsMinimumVersion(localVersion, remoteVersion)) return null;
 
       _log.i(
         'SystemsUpdateService: new version $remoteVersion (local: $localVersion)',

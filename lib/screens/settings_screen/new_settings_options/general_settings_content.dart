@@ -171,7 +171,7 @@ class GeneralSettingsContentState extends State<GeneralSettingsContent>
 
   /// Platform: Android - Triggers the system-default launcher selection activity.
   Future<void> _toggleLauncher(bool value) async {
-    if (Platform.isAndroid && value) {
+    if (Platform.isAndroid) {
       try {
         const platform = MethodChannel('com.neogamelab.neostation/launcher');
         await platform.invokeMethod('openLauncherSettings');
