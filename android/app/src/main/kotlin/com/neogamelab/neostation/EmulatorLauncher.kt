@@ -89,7 +89,7 @@ object EmulatorLauncher {
                     // RetroArch-specific: LIBRETRO core path construction uses the package name
                     // to locate the correct cores directory. CONFIGFILE default is set below.
                     if (packageName.startsWith("com.retroarch") && key == "LIBRETRO" && !finalValue.startsWith("/")) {
-                        val libretroDir = getDefaultLibretroDirectory(packageName)
+                        val libretroDir = getDefaultLibretroDirectory(context, packageName)
                         val base = finalValue
                             .removeSuffix("_libretro_android.so")
                             .removeSuffix("_libretro.so")
@@ -287,8 +287,13 @@ object EmulatorLauncher {
 
     private fun cacheContentUriToFile(context: Context, uri: Uri, fileName: String): File? {
         try {
-            val cacheDir = context.externalCacheDir ?: context.cacheDir
-            val importDir = File(cacheDir, ROM_IMPORT_DIR)
+            // Use public external storage so other apps (e.g. RetroArch) can read the cached ROM.
+            // Android 10+ blocks cross-app access to Android/data/<pkg>/cache/, but public
+            // directories under the root of external storage are accessible to any app with
+            // READ_EXTERNAL_STORAGE / MANAGE_EXTERNAL_STORAGE.
+            val publicDir = File(Environment.getExternalStorageDirectory(), "NeoStation/rom_import")
+            val importDir = if (publicDir.mkdirs() || publicDir.exists()) publicDir
+                            else File(context.externalCacheDir ?: context.cacheDir, ROM_IMPORT_DIR).also { it.mkdirs() }
             if (!importDir.exists()) {
                 importDir.mkdirs()
             }
@@ -352,8 +357,13 @@ object EmulatorLauncher {
         }
     }
 
-    private fun getDefaultLibretroDirectory(retroArchPackage: String): String {
-        return "/data/user/0/$retroArchPackage/cores/"
+    private fun getDefaultLibretroDirectory(context: Context, retroArchPackage: String): String {
+        return try {
+            val appInfo = context.packageManager.getApplicationInfo(retroArchPackage, 0)
+            "${appInfo.dataDir}/cores/"
+        } catch (_: Exception) {
+            "/data/user/0/$retroArchPackage/cores/"
+        }
     }
 
     private fun isExternalStorageDocument(uri: Uri): Boolean {
