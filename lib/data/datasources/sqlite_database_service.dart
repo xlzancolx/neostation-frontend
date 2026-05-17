@@ -471,7 +471,9 @@ class SqliteDatabaseService {
               titleId = info.titleId;
               titleName = info.gameName;
             }
-          } catch (_) {}
+          } catch (e) {
+            _log.e('Error extracting Switch game info for ${entry.path}: $e');
+          }
         }
 
         if (entry.filename.toLowerCase().endsWith('.psvita')) {
@@ -497,7 +499,9 @@ class SqliteDatabaseService {
               final trimmed = content.trim();
               if (RegExp(r'^\d+$').hasMatch(trimmed)) titleId = trimmed;
             }
-          } catch (_) {}
+          } catch (e) {
+            _log.e('Error reading Steam ID file ${entry.path}: $e');
+          }
         }
 
         const windowsIdExts = {
@@ -528,7 +532,9 @@ class SqliteDatabaseService {
             if (content != null && content.trim().isNotEmpty) {
               titleId = content.trim();
             }
-          } catch (_) {}
+          } catch (e) {
+            _log.e('Error reading Windows ID file ${entry.path}: $e');
+          }
         }
 
         batch.rawInsert(sql, [
@@ -573,7 +579,9 @@ class SqliteDatabaseService {
           if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
           referencedFilenames.add(path.basename(trimmed).toLowerCase());
         }
-      } catch (_) {}
+      } catch (e) {
+        _log.e('Error reading M3U file ${m3u.path}: $e');
+      }
     }
 
     // No references found → return copy (same aliasing protection).
@@ -810,7 +818,9 @@ class SqliteDatabaseService {
             }
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        _log.e('Error listing subdirectories for $folder: $e');
+      }
       result[folder] = subdirs;
     }
     return result;
@@ -846,7 +856,8 @@ class SqliteDatabaseService {
         recursive,
         ignoreHiddenFiles: ignoreHiddenFiles,
       );
-    } catch (_) {
+    } catch (e) {
+      _log.e('Error scanning SAF folder $romFolderUri for $folderName: $e');
       return [];
     }
   }
@@ -892,7 +903,9 @@ class SqliteDatabaseService {
           }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      _log.e('Error scanning SAF URI $uri: $e');
+    }
     return entries;
   }
 
@@ -924,7 +937,8 @@ class SqliteDatabaseService {
             break;
           }
         }
-      } catch (_) {
+      } catch (e) {
+        _log.e('Error listing standard directory $romFolderPath: $e');
         final directPath = path.join(romFolderPath, folderName);
         if (await Directory(directPath).exists()) systemPath = directPath;
       }
@@ -935,7 +949,10 @@ class SqliteDatabaseService {
         recursive,
         ignoreHiddenFiles: ignoreHiddenFiles,
       );
-    } catch (_) {
+    } catch (e) {
+      _log.e(
+        'Error scanning standard folder $romFolderPath for $folderName: $e',
+      );
       return [];
     }
   }
@@ -974,7 +991,9 @@ class SqliteDatabaseService {
           }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      _log.e('Error scanning standard path $pathStr: $e');
+    }
     return entries;
   }
 

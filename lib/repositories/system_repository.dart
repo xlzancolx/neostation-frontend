@@ -1,9 +1,12 @@
 import 'dart:io';
 import '../models/system_model.dart';
 import '../data/datasources/sqlite_service.dart';
+import 'package:neostation/services/logger_service.dart';
 
 /// Repository for handling system data (app_systems - read-only)
 class SystemRepository {
+  static final _log = LoggerService.instance;
+
   /// Get all available systems from the database
   static Future<List<SystemModel>> getAllSystems() async {
     // If the DB is empty, force sync during app startup if necessary

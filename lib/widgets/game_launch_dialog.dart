@@ -13,6 +13,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/game_service.dart';
 import '../services/game_launch_manager.dart';
 import '../utils/gamepad_nav.dart';
+import '../constants/system_folder_names.dart';
 
 class GameLaunchDialog extends StatefulWidget {
   final GameModel game;
@@ -164,7 +165,8 @@ class _GameLaunchDialogState extends State<GameLaunchDialog> {
   @override
   Widget build(BuildContext context) {
     final systemFolderName =
-        widget.system.folderName == 'all' &&
+        (widget.system.folderName == 'all' ||
+                widget.system.folderName == SystemFolderNames.favorites) &&
             widget.game.systemFolderName != null
         ? widget.game.systemFolderName!
         : widget.system.primaryFolderName;

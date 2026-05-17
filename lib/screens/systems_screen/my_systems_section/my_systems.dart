@@ -33,7 +33,6 @@ import 'package:neostation/services/logger_service.dart';
 import 'package:neostation/models/secondary_display_state.dart';
 import 'package:neostation/providers/neo_assets_provider.dart';
 import 'package:neostation/providers/system_background_provider.dart';
-import 'package:neostation/constants/system_folder_names.dart';
 import 'system_list_builder.dart';
 
 /// Primary widget for the 'My Systems' view, supporting both Grid and Carousel layouts.
@@ -439,8 +438,6 @@ class MySystems extends StatelessWidget {
     try {
       final selectedSystem = system.folderName == 'all'
           ? _createAllGamesSystem(context, configProvider.detectedSystems)
-          : system.folderName == SystemFolderNames.favorites
-          ? createFavoritesSystem(context, configProvider.detectedSystems)
           : configProvider.detectedSystems.firstWhere(
               (s) => s.folderName == system.folderName,
             );
@@ -562,22 +559,6 @@ class MySystems extends StatelessWidget {
         );
         final targetScreen = SystemGamesList(
           system: allGamesSystem,
-          fileProvider: fileProvider,
-        );
-
-        if (context.mounted) {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => targetScreen),
-          );
-        }
-      } else if (systemInfo.folderName == SystemFolderNames.favorites) {
-        final favoritesSystem = createFavoritesSystem(
-          context,
-          configProvider.detectedSystems,
-        );
-        final targetScreen = SystemGamesList(
-          system: favoritesSystem,
           fileProvider: fileProvider,
         );
 

@@ -90,7 +90,8 @@ class SystemsSettingsContentState extends State<SystemsSettingsContent> {
         subtitle: SystemFolderNames.favorites,
         isEnabled: !hiddenFolders.contains(SystemFolderNames.favorites),
         isHideToggle: true,
-        onToggle: () => provider.toggleSystemHidden(SystemFolderNames.favorites),
+        onToggle: () =>
+            provider.toggleSystemHidden(SystemFolderNames.favorites),
       ),
       ...systems.map(
         (s) => _SettingsRow(

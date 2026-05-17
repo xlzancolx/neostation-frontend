@@ -19,6 +19,7 @@ import '../services/systems_update_service.dart';
 import '../models/secondary_display_state.dart';
 import 'package:flutter/services.dart';
 import '../widgets/tv_directory_picker.dart';
+import '../constants/system_folder_names.dart';
 
 /// Provider responsible for managing application configuration and system detection using SQLite as the backend.
 ///
@@ -804,7 +805,8 @@ class SqliteConfigProvider extends ChangeNotifier {
           updatedSystem.romCount > 0 ||
           hasFolderWhenNonRecursive ||
           (updatedSystem.folderName == 'android' && Platform.isAndroid) ||
-          updatedSystem.folderName == 'all';
+          updatedSystem.folderName == 'all' ||
+          updatedSystem.folderName == SystemFolderNames.favorites;
 
       if (shouldKeep) {
         await SystemRepository.addDetectedSystem(

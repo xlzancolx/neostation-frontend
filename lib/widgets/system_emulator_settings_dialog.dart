@@ -1521,6 +1521,7 @@ class _SystemEmulatorSettingsDialogState
         );
       }
     } catch (e) {
+      _log.e('Error updating system background image: $e');
       if (mounted) {
         AppNotification.showNotification(
           context,
@@ -1558,6 +1559,7 @@ class _SystemEmulatorSettingsDialogState
         );
       }
     } catch (e) {
+      _log.e('Error resetting system background image: $e');
       if (mounted) {
         AppNotification.showNotification(
           context,
@@ -1632,6 +1634,7 @@ class _SystemEmulatorSettingsDialogState
         );
       }
     } catch (e) {
+      _log.e('Error updating system logo image: $e');
       if (mounted) {
         AppNotification.showNotification(
           context,
@@ -1667,6 +1670,7 @@ class _SystemEmulatorSettingsDialogState
         );
       }
     } catch (e) {
+      _log.e('Error resetting system logo image: $e');
       if (mounted) {
         AppNotification.showNotification(
           context,

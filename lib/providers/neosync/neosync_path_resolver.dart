@@ -94,7 +94,11 @@ extension NeoSyncPathResolver on NeoSyncProvider {
             titleId = info.titleId;
             await GameRepository.updateGameTitleId(game.romname, titleId);
           }
-        } catch (_) {}
+        } catch (e) {
+          NeoSyncProvider._log.e(
+            'Error updating game titleId for ${game?.romname}: $e',
+          );
+        }
       }
 
       // Last resort: scan NAND save dirs and reverse-lookup by titleId in DB.
@@ -188,7 +192,9 @@ extension NeoSyncPathResolver on NeoSyncProvider {
         final systemId = await GameRepository.getSystemIdForGame(game.romname);
         if (systemId != null) isDreamcast = systemId == '18';
       } catch (e) {
-        /* ignore */
+        NeoSyncProvider._log.e(
+          'Error getting system ID for Dreamcast check (${game.romname}): $e',
+        );
       }
     }
 
@@ -210,7 +216,9 @@ extension NeoSyncPathResolver on NeoSyncProvider {
         final systemId = await GameRepository.getSystemIdForGame(game.romname);
         if (systemId != null) isPS2 = systemId == '21';
       } catch (e) {
-        /* ignore */
+        NeoSyncProvider._log.e(
+          'Error getting system ID for PS2 check (${game.romname}): $e',
+        );
       }
     }
 
@@ -657,10 +665,18 @@ extension NeoSyncPathResolver on NeoSyncProvider {
                 );
                 return candidate;
               }
-            } catch (_) {}
+            } catch (e) {
+              NeoSyncProvider._log.e(
+                'Error finding Switch game by titleId $candidate: $e',
+              );
+            }
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        NeoSyncProvider._log.e(
+          'Error scanning NAND directory for ${nand.emulatorName}: $e',
+        );
+      }
     }
     return null;
   }

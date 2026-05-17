@@ -38,6 +38,7 @@ import '../../providers/system_background_provider.dart';
 import '../../widgets/marquee_text.dart';
 import '../../models/secondary_display_state.dart';
 import '../../widgets/system_logo_fallback.dart';
+import '../../constants/system_folder_names.dart';
 
 /// Transfer object for background game save detection tasks.
 class GameSaveDetectionData {
@@ -661,7 +662,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
     if (_secondaryDisplayState == null || _isNavigatingBack) return;
 
     final systemFolderName =
-        widget.system.folderName == 'all' && game.systemFolderName != null
+        (widget.system.folderName == 'all' ||
+                widget.system.folderName == SystemFolderNames.favorites) &&
+            game.systemFolderName != null
         ? game.systemFolderName!
         : widget.system.primaryFolderName;
 
@@ -842,7 +845,11 @@ class _SystemGamesListState extends State<SystemGamesList> {
   }
 
   void _updateBackground(GameModel game) {
-    if (!mounted || widget.system.folderName == 'all') return;
+    if (!mounted ||
+        widget.system.folderName == 'all' ||
+        widget.system.folderName == SystemFolderNames.favorites) {
+      return;
+    }
 
     final systemFolderName = widget.system.primaryFolderName;
 
@@ -865,7 +872,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
     } else {
       // Hardware-specific fallback if no game-specific art is resolved.
       final sysId =
-          widget.system.folderName == 'all' && game.systemFolderName != null
+          (widget.system.folderName == 'all' ||
+                  widget.system.folderName == SystemFolderNames.favorites) &&
+              game.systemFolderName != null
           ? game.systemFolderName!
           : widget.system.id;
       final path =
@@ -904,7 +913,8 @@ class _SystemGamesListState extends State<SystemGamesList> {
       String? systemId;
 
       // In 'Global Library' mode, resolve the game's native hardware system ID.
-      if (widget.system.folderName == 'all' &&
+      if ((widget.system.folderName == 'all' ||
+              widget.system.folderName == SystemFolderNames.favorites) &&
           _selectedGame!.systemFolderName != null) {
         final originalSystem = await SystemRepository.getSystemByFolderName(
           _selectedGame!.systemFolderName!,
@@ -1246,7 +1256,8 @@ class _SystemGamesListState extends State<SystemGamesList> {
     // Resolve targeted hardware system for the launch.
     SystemModel systemToLaunch = widget.system;
 
-    if (widget.system.folderName == 'all' &&
+    if ((widget.system.folderName == 'all' ||
+            widget.system.folderName == SystemFolderNames.favorites) &&
         _selectedGame!.systemFolderName != null) {
       final availableSystems = context
           .read<SqliteConfigProvider>()
@@ -1853,7 +1864,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
   /// Resolves the absolute filesystem path for the targeted game video.
   String _getVideoPath(GameModel game) {
     final systemFolderName =
-        widget.system.folderName == 'all' && game.systemFolderName != null
+        (widget.system.folderName == 'all' ||
+                widget.system.folderName == SystemFolderNames.favorites) &&
+            game.systemFolderName != null
         ? game.systemFolderName!
         : widget.system.primaryFolderName;
 
@@ -2414,7 +2427,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
                   selectedIndex: _selectedGameIndex,
                   systemColor: widget.system.colorAsColor,
                   onGameSelected: _selectGame,
-                  isAllMode: widget.system.folderName == 'all',
+                  isAllMode:
+                      widget.system.folderName == 'all' ||
+                      widget.system.folderName == SystemFolderNames.favorites,
                   isNavigatingFast: _isNavigatingFast,
                   onGamepadReactivated: _reactivateGamepadNavigation,
                   onBack: _goBack,
@@ -2501,7 +2516,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
         showVideo: _showVideo,
         videoController: _videoController,
         isVideoLoading: _isVideoLoading,
-        isAllMode: widget.system.folderName == 'all',
+        isAllMode:
+            widget.system.folderName == 'all' ||
+            widget.system.folderName == SystemFolderNames.favorites,
         retroAchievementsProvider: _retroAchievementsProvider,
         syncProvider: syncManager.active!,
         localizedDescription: _localizedDescription,

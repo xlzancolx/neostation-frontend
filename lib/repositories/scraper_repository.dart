@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import '../data/datasources/sqlite_service.dart';
+import 'package:neostation/services/logger_service.dart';
 
 /// Repository for ScreenScraper system configuration data access.
 class ScraperRepository {
+  static final _log = LoggerService.instance;
+
   /// Returns detected systems that have a ScreenScraper ID, ordered by name.
   static Future<List<Map<String, dynamic>>> getScraperSystems() async {
     final db = await SqliteService.getDatabase();
@@ -68,6 +71,7 @@ class ScraperRepository {
       );
       return true;
     } catch (e) {
+      _log.e('Error saving scraper system config: $e');
       return false;
     }
   }
@@ -88,6 +92,7 @@ class ScraperRepository {
       }
       await db.execute('COMMIT');
     } catch (e) {
+      _log.e('Error saving all scraper systems config: $e');
       await db.execute('ROLLBACK');
       rethrow;
     }
@@ -147,6 +152,7 @@ class ScraperRepository {
 
       return true;
     } catch (e) {
+      _log.e('Error saving scraper credentials: $e');
       return false;
     }
   }
@@ -198,6 +204,7 @@ class ScraperRepository {
 
       return null;
     } catch (e) {
+      _log.e('Error getting scraper credentials: $e');
       return null;
     }
   }
@@ -209,6 +216,7 @@ class ScraperRepository {
       await db.delete('user_screenscraper_credentials');
       return true;
     } catch (e) {
+      _log.e('Error clearing scraper credentials: $e');
       return false;
     }
   }
@@ -250,6 +258,7 @@ class ScraperRepository {
         'scrape_videos': true,
       };
     } catch (e) {
+      _log.e('Error getting scraper config: $e');
       return {
         'scrape_mode': 'new_only',
         'scrape_metadata': true,
@@ -295,6 +304,7 @@ class ScraperRepository {
 
       return true;
     } catch (e) {
+      _log.e('Error saving scraper config: $e');
       return false;
     }
   }
@@ -321,6 +331,7 @@ class ScraperRepository {
       ''');
       return mappings;
     } catch (e) {
+      _log.e('Error getting system mappings: $e');
       return [];
     }
   }
@@ -459,6 +470,7 @@ class ScraperRepository {
 
       return true;
     } catch (e) {
+      _log.e('Error saving game metadata: $e');
       return false;
     }
   }
@@ -543,7 +555,9 @@ class ScraperRepository {
       if (result.isNotEmpty) {
         return result.first['preferred_language']?.toString() ?? 'en';
       }
-    } catch (_) {}
+    } catch (e) {
+      _log.e('Error getting preferred language: $e');
+    }
     return 'en';
   }
 }

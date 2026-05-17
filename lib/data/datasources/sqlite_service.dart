@@ -421,7 +421,7 @@ class SqliteService {
   SqliteService._internal();
 
   // Database configuration
-  static const int _databaseVersion = 82;
+  static const int _databaseVersion = 83;
   static const String _databaseName = 'data.sqlite';
 
   DatabaseAdapter? _database;
@@ -1762,7 +1762,7 @@ class SqliteService {
         // Insert "All Systems" virtual system for settings persistence
         await txn.execute('''
           INSERT OR IGNORE INTO app_systems (id, screenscraper_id, ra_id, real_name, folder_name, launch_date, description)
-          VALUES ('all', 0, 0, 'All Systems', 'all', '2024-01-01', 
+          VALUES ('all', 0, 0, 'All Systems', 'all', '2024-01-01',
                   'Collection of all systems available in NeoStation.')
         ''');
       });
@@ -2544,8 +2544,9 @@ class SqliteService {
       FROM app_systems s
       LEFT JOIN user_detected_systems uds ON s.id = uds.app_system_id
       LEFT JOIN user_system_settings ss ON s.id = ss.app_system_id
-      WHERE uds.app_system_id IS NOT NULL 
+      WHERE uds.app_system_id IS NOT NULL
          OR (SELECT COUNT(*) FROM user_roms ur WHERE ur.app_system_id = s.id) > 0
+         OR (s.folder_name = 'favorites' AND (SELECT COUNT(*) FROM user_roms WHERE is_favorite = 1) > 0)
       ORDER BY s.real_name ASC
     ''');
 
@@ -2737,7 +2738,10 @@ class SqliteService {
       }
 
       return system;
-    } catch (_) {
+    } catch (e) {
+      if (e is! StateError) {
+        _log.e('Error getting system by folder name "$folderName": $e');
+      }
       throw Exception('System not found: $folderName');
     }
   }

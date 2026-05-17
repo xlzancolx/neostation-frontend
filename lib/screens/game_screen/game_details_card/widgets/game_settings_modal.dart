@@ -11,6 +11,7 @@ import 'package:neostation/models/game_model.dart';
 import 'package:neostation/models/system_model.dart';
 import 'package:neostation/sync/i_sync_provider.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
+import 'package:neostation/constants/system_folder_names.dart';
 
 /// A configuration modal for managing per-game settings, such as cloud synchronization preferences.
 class GameSettingsModal extends StatefulWidget {
@@ -100,7 +101,8 @@ class _GameSettingsModalState extends State<GameSettingsModal> {
     try {
       // Resolve the authoritative system folder (handling 'all' / unified views).
       final targetSystemFolder =
-          widget.system.folderName == 'all' &&
+          (widget.system.folderName == 'all' ||
+                  widget.system.folderName == SystemFolderNames.favorites) &&
               widget.game.systemFolderName != null
           ? widget.game.systemFolderName!
           : widget.system.folderName;

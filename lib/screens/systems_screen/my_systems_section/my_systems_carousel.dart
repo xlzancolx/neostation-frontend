@@ -30,7 +30,6 @@ import 'package:neostation/models/secondary_display_state.dart';
 import 'package:neostation/widgets/header_sort_dropdown.dart';
 import '../../../widgets/system_logo_fallback.dart';
 import 'package:neostation/services/music_player_service.dart';
-import 'package:neostation/constants/system_folder_names.dart';
 import 'system_list_builder.dart';
 
 /// A premium carousel-based orchestrator for system and recent game selection.
@@ -436,20 +435,6 @@ class _MySystemsCarouselState extends State<MySystemsCarousel> {
           context,
           MaterialPageRoute(builder: (context) => targetScreen),
         );
-      } else if (systemInfo.folderName == SystemFolderNames.favorites) {
-        final favoritesSystem = createFavoritesSystem(
-          context,
-          configProvider.detectedSystems,
-        );
-        final targetScreen = SystemGamesList(
-          system: favoritesSystem,
-          fileProvider: fileProvider,
-        );
-
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => targetScreen),
-        );
       } else {
         final systemMeta = configProvider.detectedSystems.firstWhere(
           (system) => system.folderName == systemInfo.folderName,
@@ -504,8 +489,6 @@ class _MySystemsCarouselState extends State<MySystemsCarousel> {
 
     final selectedSystem = selectedSystemInfo.folderName == 'all'
         ? _createAllGamesSystem(configProvider.detectedSystems)
-        : selectedSystemInfo.folderName == SystemFolderNames.favorites
-        ? createFavoritesSystem(context, configProvider.detectedSystems)
         : configProvider.detectedSystems.cast<SystemModel?>().firstWhere(
             (system) => system?.folderName == selectedSystemInfo.folderName,
             orElse: () => null,

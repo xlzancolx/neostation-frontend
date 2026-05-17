@@ -2103,7 +2103,8 @@ class SqliteMigrations {
           }
         }
         db.execute('COMMIT');
-      } catch (_) {
+      } catch (e) {
+        _log.e('Error executing SQL statements from asset: $e');
         db.execute('ROLLBACK');
         rethrow;
       }
