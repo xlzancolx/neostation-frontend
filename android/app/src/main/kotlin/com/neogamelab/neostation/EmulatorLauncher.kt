@@ -188,7 +188,9 @@ object EmulatorLauncher {
     //                               content:// directly; falls back to a local cache
     //                               copy for network/NAS providers (Round Sync, CIFS…)
     //                               that have no filesystem mapping.
-    //  neostation-localuri:<uri> → same resolution as realpath, returned as file:// URI.
+    //  neostation-localuri:<uri> → passes content:// URIs through as-is so that
+    //                                 launchGenericIntent can grant read permissions.
+    //                                 Bare local paths become file:// URI.
     private fun resolveMarkedValue(context: Context, value: String): String {
         return when {
             value.startsWith("neostation-realpath:") -> {
@@ -203,15 +205,17 @@ object EmulatorLauncher {
             }
             value.startsWith("neostation-localuri:") -> {
                 val raw = value.removePrefix("neostation-localuri:")
+                // Keep content:// URIs as-is so launchGenericIntent can grant
+                // FLAG_GRANT_READ_URI_PERMISSION. Converting to file:// breaks on
+                // Android 10+ scoped storage where the target emulator lacks read
+                // access to the resolved external-storage path.
                 if (raw.startsWith("content://")) {
-                    val uri = Uri.parse(raw)
-                    val path = resolveSafUriToPath(context, uri) ?: run {
-                        val fileName = getFileNameFromUri(context, uri) ?: "rom"
-                        cacheContentUriToFile(context, uri, fileName)?.absolutePath
-                    }
-                    if (path != null) "file://$path" else raw
-                } else if (raw.startsWith("file://")) raw
-                else "file://$raw"
+                    raw
+                } else if (raw.startsWith("file://")) {
+                    raw
+                } else {
+                    "file://$raw"
+                }
             }
             else -> value
         }
