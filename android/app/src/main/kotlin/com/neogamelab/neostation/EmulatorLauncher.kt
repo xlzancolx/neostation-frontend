@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.provider.OpenableColumns
+import androidx.core.content.FileProvider
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
@@ -65,6 +66,46 @@ object EmulatorLauncher {
                 }
             }
 
+            // Convert SAF content:// URIs to our own FileProvider URI.
+            // FileProvider URIs cannot be easily resolved to real filesystem paths by
+            // receiving apps, so emulators (e.g. .emu series) fall back to saving in
+            // their private data directory instead of trying (and failing) to write
+            // save states (.frz) next to the ROM. This matches Pegasus behaviour.
+            //
+            // EXCEPTION: Multi-file formats (.cue, .gdi, .m3u) are NOT converted.
+            // These files contain relative paths to sibling track files (.bin, .iso).
+            // Emulators like DuckStation read the cue, extract the relative filename,
+            // and then try to open it as a local file. If we pass a FileProvider URI
+            // for the cue, the emulator cannot determine the base directory to resolve
+            // the relative path, so it fails to find the .bin. Keeping the original SAF
+            // URI allows the emulator to resolve the real directory and find siblings.
+            var masterRealPath: String? = null
+            var isMultiFile = false
+            // Emulators that need real filesystem paths for multi-file ROMs
+            // because they resolve sibling track files via relative paths.
+            val needsRealPathForMultiFile = packageName in setOf(
+                "com.github.stenzek.duckstation"
+            )
+            if (uriData?.scheme == "content") {
+                masterRealPath = resolveSafUriToPath(context, uriData)
+                val masterFileName = getFileNameFromUri(context, uriData) ?: ""
+                val masterExt = masterFileName.substringAfterLast('.', "").lowercase()
+                isMultiFile = masterExt in setOf("cue", "gdi", "m3u")
+
+                if (masterRealPath != null && !isMultiFile) {
+                    // Single-file ROMs (.sfc, .gba, etc.): convert to FileProvider URI
+                    // so .emu emulators save states in their private data dir.
+                    val providerUri = resolveToFileProviderUri(context, uriData)
+                    if (providerUri != null) {
+                        uriData = providerUri
+                    }
+                } else if (masterRealPath != null && isMultiFile && needsRealPathForMultiFile) {
+                    // Only convert to file:// for emulators that need real paths
+                    // to resolve sibling track files. Others keep SAF URI with grants.
+                    uriData = Uri.parse("file://$masterRealPath")
+                }
+            }
+
             if (uriData != null && type != null) {
                 intent.setDataAndType(uriData, type)
             } else if (uriData != null) {
@@ -97,15 +138,21 @@ object EmulatorLauncher {
                         continue
                     }
 
+                    val resolvedFinalValue = if (finalValue.startsWith("content://") && needsRealPathForMultiFile) {
+                        resolveMultiFileExtraToFileUri(context, finalValue)
+                    } else {
+                        finalValue
+                    }
+
                     when (valueType) {
-                        "string" -> intent.putExtra(key, finalValue)
-                        "bool" -> intent.putExtra(key, finalValue.toBoolean())
-                        "int" -> intent.putExtra(key, finalValue.toIntOrNull() ?: 0)
-                        "long" -> intent.putExtra(key, finalValue.toLongOrNull() ?: 0L)
-                        "float" -> intent.putExtra(key, finalValue.toFloatOrNull() ?: 0.0f)
-                        "uri" -> intent.putExtra(key, Uri.parse(finalValue))
+                        "string" -> intent.putExtra(key, resolvedFinalValue)
+                        "bool" -> intent.putExtra(key, resolvedFinalValue.toBoolean())
+                        "int" -> intent.putExtra(key, resolvedFinalValue.toIntOrNull() ?: 0)
+                        "long" -> intent.putExtra(key, resolvedFinalValue.toLongOrNull() ?: 0L)
+                        "float" -> intent.putExtra(key, resolvedFinalValue.toFloatOrNull() ?: 0.0f)
+                        "uri" -> intent.putExtra(key, Uri.parse(resolvedFinalValue))
                         "string_array" -> intent.putExtra(
-                            key, finalValue.split(",").map { it.trim() }.toTypedArray()
+                            key, resolvedFinalValue.split(",").map { it.trim() }.toTypedArray()
                         )
                     }
                 }
@@ -135,15 +182,18 @@ object EmulatorLauncher {
                 // is processed asynchronously by ActivityManager, so on first launch the
                 // emulator can attempt to read the file before the grant arrives → fails.
                 // Second launch works because the permission is already cached.
+                // WRITE permission is also granted so emulators (e.g. .emu series) can
+                // create save states (.frz) and SRAM files in the ROM directory.
                 try {
                     context.grantUriPermission(
                         packageName,
                         primaryContentUri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
                 } catch (_: Exception) { }
 
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 if (intent.clipData == null) {
                     intent.clipData = ClipData.newRawUri("ROM", primaryContentUri)
                 }
@@ -154,10 +204,19 @@ object EmulatorLauncher {
                 // denied when it tries to read the actual track data.
                 val masterFileName = getFileNameFromUri(context, primaryContentUri) ?: ""
                 val masterExt = masterFileName.substringAfterLast('.', "").lowercase()
-                if (masterExt in setOf("cue", "gdi", "m3u") &&
-                    android.provider.DocumentsContract.isDocumentUri(context, primaryContentUri) &&
-                    android.provider.DocumentsContract.isTreeUri(primaryContentUri)) {
-                    grantSiblingTrackPermissions(context, packageName, primaryContentUri)
+                if (masterExt in setOf("cue", "gdi", "m3u")) {
+                    if (isMultiFile && android.provider.DocumentsContract.isDocumentUri(context, primaryContentUri) &&
+                        !needsRealPathForMultiFile) {
+                        // For emulators that handle SAF natively (Flycast, etc.):
+                        // Keep SAF URI and grant permissions to sibling track files.
+                        // Document URIs work here — getTreeDocumentId extracts the tree
+                        // portion from the document ID automatically.
+                        grantSiblingTrackPermissions(context, packageName, intent, primaryContentUri)
+                    } else if (masterRealPath != null) {
+                        // For emulators needing real paths (DuckStation) or as fallback:
+                        // Use FileProvider URIs for siblings.
+                        grantSiblingFileProviderPermissions(context, packageName, intent, masterRealPath)
+                    }
                 }
             }
 
@@ -378,7 +437,7 @@ object EmulatorLauncher {
     // Matches: (1) any extension with the exact same base name, or (2) track files whose
     // name starts with the master base name (e.g. "Game Track 01.bin", "Game Track 02.bin").
     // This avoids over-granting when multiple games share the same directory.
-    private fun grantSiblingTrackPermissions(context: Context, packageName: String, masterUri: Uri) {
+    private fun grantSiblingTrackPermissions(context: Context, packageName: String, intent: Intent, masterUri: Uri) {
         val trackExts = setOf("bin", "iso", "img", "sub", "wav", "flac", "dat")
         try {
             val treeDocId = android.provider.DocumentsContract.getTreeDocumentId(masterUri)
@@ -412,8 +471,91 @@ object EmulatorLauncher {
                         val childUri = android.provider.DocumentsContract.buildDocumentUriUsingTree(treeUri, childDocId)
                         try {
                             context.grantUriPermission(packageName, childUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            // Add sibling URIs to ClipData so the emulator can access them
+                            // via ContentResolver. Without this, grantUriPermission alone may
+                            // not be sufficient for some emulators (e.g. DuckStation).
+                            intent.clipData?.addItem(ClipData.Item(childUri))
                         } catch (_: Exception) {}
                     }
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    // Converts a SAF content:// URI (e.g. com.android.externalstorage.documents)
+    // to a FileProvider URI owned by NeoStation. Receiving apps can read the file
+    // via ContentResolver, but cannot easily resolve it back to a real filesystem
+    // path. This prevents emulators like the .emu series from attempting to write
+    // save states next to the ROM (which fails on Android 10+ scoped storage).
+    private fun resolveToFileProviderUri(context: Context, contentUri: Uri): Uri? {
+        val realPath = resolveSafUriToPath(context, contentUri)
+        if (realPath != null) {
+            val file = File(realPath)
+            if (file.exists()) {
+                return try {
+                    FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        file
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        }
+        return null
+    }
+
+    // If the extra value is a content:// URI pointing to a multi-file format (.cue, .gdi, .m3u),
+    // resolves it to a file:// URI so the emulator can read sibling track files via the
+    // real filesystem. For all other URIs returns the original value unchanged.
+    private fun resolveMultiFileExtraToFileUri(context: Context, value: String): String {
+        if (!value.startsWith("content://")) return value
+        val uri = Uri.parse(value)
+        val fileName = getFileNameFromUri(context, uri) ?: return value
+        val ext = fileName.substringAfterLast('.', "").lowercase()
+        if (ext !in setOf("cue", "gdi", "m3u")) return value
+        val realPath = resolveSafUriToPath(context, uri) ?: return value
+        return "file://$realPath"
+    }
+
+    // Grants read+write permission for sibling track files when using FileProvider URIs.
+    // Used for multi-file formats (.cue, .gdi, .m3u) that reference sibling files.
+    private fun grantSiblingFileProviderPermissions(
+        context: Context,
+        packageName: String,
+        intent: Intent,
+        masterRealPath: String
+    ) {
+        val trackExts = setOf("bin", "iso", "img", "sub", "wav", "flac", "dat", "raw", "ogg", "mp3")
+        try {
+            val masterFile = File(masterRealPath)
+            val parentDir = masterFile.parentFile ?: return
+            val masterBase = masterFile.nameWithoutExtension.lowercase()
+
+            parentDir.listFiles()?.forEach { file ->
+                if (file == masterFile) return@forEach
+                val childNameLower = file.name.lowercase()
+                val childExt = file.extension.lowercase()
+                val childBase = file.nameWithoutExtension.lowercase()
+
+                val sameBaseName = childBase == masterBase
+                val isTrackSibling = childExt in trackExts && childNameLower.startsWith(masterBase)
+
+                if (sameBaseName || isTrackSibling) {
+                    try {
+                        val siblingUri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            file
+                        )
+                        context.grantUriPermission(
+                            packageName,
+                            siblingUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                        intent.clipData?.addItem(ClipData.Item(siblingUri))
+                    } catch (_: Exception) {}
                 }
             }
         } catch (_: Exception) {}
