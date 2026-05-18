@@ -1114,6 +1114,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
 
         _reorderGamesListKeepingVisualPosition();
 
+        if (!mounted) return;
         AppNotification.showNotification(
           context,
           AppLocale.favoriteUpdated.getString(context),
@@ -1147,6 +1148,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
 
       _reorderGamesListKeepingVisualPosition();
 
+      if (!mounted) return;
       AppNotification.showNotification(
         context,
         AppLocale.favoriteUpdated.getString(context),
@@ -1155,6 +1157,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
     } catch (error) {
       if (!mounted) return;
       _log.e('Error toggling favorite: $error');
+      if (!mounted) return;
       AppNotification.showNotification(
         context,
         AppLocale.errorUpdatingFavorite.getString(context),
