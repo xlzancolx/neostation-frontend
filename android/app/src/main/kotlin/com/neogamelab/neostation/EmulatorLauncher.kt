@@ -92,7 +92,12 @@ object EmulatorLauncher {
                 val masterExt = masterFileName.substringAfterLast('.', "").lowercase()
                 isMultiFile = masterExt in setOf("cue", "gdi", "m3u")
 
-                if (masterRealPath != null && !isMultiFile) {
+                // Emulators that natively handle SAF content:// URIs for all ROMs.
+                // Flycast supports SAF directly; converting to FileProvider breaks .zip loading.
+                val keepsSafUri = packageName in setOf(
+                    "com.flycast.emulator"
+                )
+                if (masterRealPath != null && !isMultiFile && !keepsSafUri) {
                     // Single-file ROMs (.sfc, .gba, etc.): convert to FileProvider URI
                     // so .emu emulators save states in their private data dir.
                     val providerUri = resolveToFileProviderUri(context, uriData)
@@ -197,6 +202,18 @@ object EmulatorLauncher {
                 if (intent.clipData == null) {
                     intent.clipData = ClipData.newRawUri("ROM", primaryContentUri)
                 }
+
+                // Grant permission to the parent directory tree so the emulator can read
+                // sibling files, subfolders, or write saves next to the ROM (e.g. Flycast
+                // reading .chd inside a subfolder, or .emu creating .frz states).
+                // This is safe and cheap — emulators that don't need it simply ignore the URI.
+                grantParentTreePermission(context, packageName, intent, primaryContentUri)
+
+                // For .zip ROMs that ship with a side-car folder (same name as the zip,
+                // without extension), grant explicit read permission to every file inside
+                // that subfolder so the emulator can open them directly (e.g. Flycast
+                // opening .chd files inside a NAOMI GD / NAOMI2 game folder).
+                grantSubfolderContentsIfZip(context, packageName, intent, primaryContentUri)
 
                 // Multi-file formats (.cue, .gdi, .m3u) reference sibling track files
                 // (.bin, .iso, .img, .wav, etc.) that also need explicit URI permissions.
@@ -431,6 +448,125 @@ object EmulatorLauncher {
 
     private fun isExternalStorageDocument(uri: Uri): Boolean {
         return "com.android.externalstorage.documents" == uri.authority
+    }
+
+    // Grants URI permission to the SAF tree root that contains the file so the emulator
+    // can read sibling files and navigate subfolders (e.g. Flycast reading .chd files
+    // inside a NAOMI GD / NAOMI2 game subfolder).  We grant permission to the actual
+    // tree root (obtained via getTreeDocumentId) and add FLAG_GRANT_PREFIX_URI_PERMISSION
+    // so the permission propagates to every descendant document in the tree.
+    private fun grantParentTreePermission(context: Context, packageName: String, intent: Intent, fileUri: Uri) {
+        try {
+            if (!android.provider.DocumentsContract.isDocumentUri(context, fileUri)) return
+            val treeDocId = android.provider.DocumentsContract.getTreeDocumentId(fileUri)
+            val treeUri = android.provider.DocumentsContract.buildTreeDocumentUri(fileUri.authority, treeDocId)
+
+            context.grantUriPermission(
+                packageName,
+                treeUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+
+            // FLAG_GRANT_PREFIX_URI_PERMISSION is required for tree URIs so that the
+            // receiving app can access every descendant document in the tree, not just
+            // the tree root itself.
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                intent.addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
+            }
+
+            if (intent.clipData == null) {
+                intent.clipData = ClipData.newRawUri("ROM_DIR", treeUri)
+            } else {
+                intent.clipData?.addItem(ClipData.Item(treeUri))
+            }
+        } catch (_: Exception) { }
+    }
+
+    // When a ROM is a .zip that ships with a side-car folder (same name without .zip),
+    // some emulators (e.g. Flycast for NAOMI GD / NAOMI2) need to read files inside that
+    // folder.  We find the sibling folder in the same directory, list every file inside
+    // it, and grant explicit read permission to each individual file so the emulator
+    // can open them directly via ContentResolver.
+    private fun grantSubfolderContentsIfZip(context: Context, packageName: String, intent: Intent, fileUri: Uri) {
+        try {
+            if (!android.provider.DocumentsContract.isDocumentUri(context, fileUri)) return
+            val fileName = getFileNameFromUri(context, fileUri) ?: return
+            if (!fileName.endsWith(".zip", ignoreCase = true)) return
+
+            val docId = android.provider.DocumentsContract.getDocumentId(fileUri)
+            if (!docId.contains('/')) return
+            val authority = fileUri.authority ?: return
+
+            // Name of the expected sibling folder (same as zip without extension)
+            val folderName = fileName.substringBeforeLast('.', "")
+            if (folderName.isEmpty()) return
+
+            // Parent directory of the zip file
+            val parentDocId = docId.substringBeforeLast('/')
+            val parentTreeUri = android.provider.DocumentsContract.buildTreeDocumentUri(authority, parentDocId)
+            val parentChildrenUri = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(parentTreeUri, parentDocId)
+
+            // Look for the sibling folder in the parent directory
+            var subfolderDocId: String? = null
+            context.contentResolver.query(
+                parentChildrenUri,
+                arrayOf(
+                    android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    android.provider.DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    android.provider.DocumentsContract.Document.COLUMN_MIME_TYPE
+                ),
+                null, null, null
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val childDocId = cursor.getString(0) ?: continue
+                    val childName = cursor.getString(1) ?: continue
+                    val mimeType = cursor.getString(2) ?: continue
+                    if (childName == folderName && mimeType == android.provider.DocumentsContract.Document.MIME_TYPE_DIR) {
+                        subfolderDocId = childDocId
+                        break
+                    }
+                }
+            }
+            if (subfolderDocId == null) return
+
+            // Build tree URI for the subfolder and grant read permission
+            val subfolderTreeUri = android.provider.DocumentsContract.buildTreeDocumentUri(authority, subfolderDocId!!)
+            try {
+                context.grantUriPermission(
+                    packageName,
+                    subfolderTreeUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+                intent.clipData?.addItem(ClipData.Item(subfolderTreeUri))
+            } catch (_: Exception) {}
+
+            // List every file inside the subfolder and grant explicit read permission
+            val subfolderChildrenUri = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(subfolderTreeUri, subfolderDocId!!)
+            context.contentResolver.query(
+                subfolderChildrenUri,
+                arrayOf(
+                    android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    android.provider.DocumentsContract.Document.COLUMN_DISPLAY_NAME
+                ),
+                null, null, null
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val childDocId = cursor.getString(0) ?: continue
+                    val childName = cursor.getString(1) ?: continue
+                    val childUri = android.provider.DocumentsContract.buildDocumentUriUsingTree(subfolderTreeUri, childDocId)
+                    try {
+                        context.grantUriPermission(
+                            packageName,
+                            childUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                        intent.clipData?.addItem(ClipData.Item(childUri))
+                    } catch (_: Exception) {}
+                }
+            }
+        } catch (_: Exception) { }
     }
 
     // Grants read permission for sibling track files belonging to the same disc image.
