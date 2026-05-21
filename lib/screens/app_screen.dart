@@ -151,9 +151,9 @@ class AppScreenState extends State<AppScreen> {
     bool systemsUpdated = false;
 
     if (configProvider.config.autoUpdateApp) {
-      final appUpdateShown = await _checkAndShowAppUpdate();
-      if (appUpdateShown) {
-        // App update dialog is active — consume scan flag but don't scan now.
+      final appUpdateResult = await _checkAndShowAppUpdate();
+      if (appUpdateResult == true) {
+        // User chose Update Now — consume scan flag but don't scan now.
         // User will restart after updating.
         configProvider.consumeStartupScan();
         return;
@@ -174,16 +174,15 @@ class AppScreenState extends State<AppScreen> {
 
   /// Checks for a new app version and shows the update dialog if found.
   /// Returns true if the dialog was shown.
-  Future<bool> _checkAndShowAppUpdate() async {
+  Future<bool?> _checkAndShowAppUpdate() async {
     try {
       final updateInfo = await UpdateService.checkForUpdates();
       if (updateInfo != null && mounted) {
-        showDialog(
+        return await showDialog<bool>(
           context: context,
           barrierDismissible: false,
           builder: (context) => UpdateDialog(updateInfo: updateInfo),
         );
-        return true;
       }
     } catch (e) {
       _log.e('AppScreen: App update check failure', error: e);

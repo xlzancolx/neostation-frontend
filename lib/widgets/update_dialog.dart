@@ -22,8 +22,8 @@ class UpdateDialog extends StatefulWidget {
 }
 
 class _UpdateDialogState extends State<UpdateDialog> {
-  bool _isDownloading = false;
-  double _downloadProgress = 0.0;
+  final bool _isDownloading = false;
+  final double _downloadProgress = 0.0;
   late final GamepadNavigation _gamepadNav;
 
   @override
@@ -260,12 +260,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                     'assets/images/gamepad/Xbox_B_button.png',
                                 label: AppLocale.updateLater.getString(context),
                                 onTap: () => Navigator.of(context).pop(false),
-                                backgroundColor: theme
-                                    .colorScheme
-                                    .surfaceContainerHighest
-                                    .withValues(alpha: 0.5),
-                                textColor: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.8),
+                                backgroundColor: theme.colorScheme.tertiary,
+                                textColor: theme.colorScheme.onSurface,
                               ),
                             ),
                             SizedBox(width: 8.r),
@@ -295,19 +291,14 @@ class _UpdateDialogState extends State<UpdateDialog> {
   }
 
   Future<void> _startUpdate() async {
-    setState(() {
-      _isDownloading = true;
-      _downloadProgress = 0.0;
-    });
+    Navigator.of(context).pop(true);
 
-    final success = await UpdateService.downloadAndInstall(widget.updateInfo, (
-      progress,
-    ) {
-      if (mounted) setState(() => _downloadProgress = progress);
-    });
+    final success = await UpdateService.downloadAndInstall(
+      widget.updateInfo,
+      (progress) {},
+    );
 
     if (!success && mounted) {
-      setState(() => _isDownloading = false);
       AppNotification.showNotification(
         context,
         Platform.isAndroid

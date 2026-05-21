@@ -185,6 +185,7 @@ class GeneralSettingsContentState extends State<GeneralSettingsContent>
   int getItemCount() {
     int count = 0;
     count++; // Scan on Startup
+    count++; // Ignore hidden files in scan
     count++; // Auto-update App
     count++; // Auto-update Systems
     count++; // SFX Sounds
@@ -215,6 +216,14 @@ class GeneralSettingsContentState extends State<GeneralSettingsContent>
     if (index == currentItemIndex) {
       final scanOnStartup = configProvider.config.scanOnStartup;
       configProvider.updateScanOnStartup(!scanOnStartup);
+      return;
+    }
+    currentItemIndex++;
+
+    // Protocol: Ignore hidden files in scan.
+    if (index == currentItemIndex) {
+      final ignoreHiddenFiles = configProvider.config.ignoreHiddenFiles;
+      configProvider.updateIgnoreHiddenFiles(!ignoreHiddenFiles);
       return;
     }
     currentItemIndex++;
