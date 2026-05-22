@@ -740,6 +740,11 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
   /// Internal flag tracking the origin of navigation events.
   final bool _gamepadNavigationActive = false;
 
+  /// Pinch gesture tracking for touch-based density changes (raw pointer events).
+  final Map<int, Offset> _activePointers = {};
+  double? _lastPinchDistance;
+  DateTime? _lastPinchTime;
+
   SecondaryDisplayState? _secondaryDisplayState;
 
   final Map<String, String?> _themeBackgrounds = {};
@@ -1287,7 +1292,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
           });
         }
 
-        return Theme(
+        Widget grid = Theme(
           data: _cachedThemeData ?? Theme.of(context),
           child: ScrollConfiguration(
             behavior:
@@ -1296,8 +1301,87 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
             child: _buildWideCardGrid(context, _systemCards),
           ),
         );
+
+        if (Platform.isAndroid) {
+          grid = Listener(
+            onPointerDown: _handlePointerDown,
+            onPointerMove: _handlePointerMove,
+            onPointerUp: _handlePointerUp,
+            onPointerCancel: _handlePointerCancel,
+            behavior: HitTestBehavior.translucent,
+            child: grid,
+          );
+        }
+
+        return grid;
       },
     );
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _activePointers[event.pointer] = event.position;
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    _activePointers[event.pointer] = event.position;
+    if (_activePointers.length < 2) return;
+
+    final now = DateTime.now();
+    if (_lastPinchTime != null &&
+        now.difference(_lastPinchTime!).inMilliseconds < 120) {
+      return;
+    }
+
+    final positions = _activePointers.values.toList();
+    final distance = (positions[0] - positions[1]).distance;
+
+    if (_lastPinchDistance != null) {
+      final deltaDistance = distance - _lastPinchDistance!;
+      if (deltaDistance > 35) {
+        // Fingers spreading apart → bigger cards → fewer columns
+        _adjustGridDensity(-1);
+        _lastPinchDistance = distance;
+        _lastPinchTime = now;
+      } else if (deltaDistance < -35) {
+        // Fingers coming together → smaller cards → more columns
+        _adjustGridDensity(1);
+        _lastPinchDistance = distance;
+        _lastPinchTime = now;
+      }
+    } else {
+      _lastPinchDistance = distance;
+    }
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    _activePointers.remove(event.pointer);
+    if (_activePointers.length < 2) {
+      _lastPinchDistance = null;
+    }
+  }
+
+  void _handlePointerCancel(PointerCancelEvent event) {
+    _activePointers.remove(event.pointer);
+    if (_activePointers.length < 2) {
+      _lastPinchDistance = null;
+    }
+  }
+
+  /// Adjusts grid column density based on pinch gesture direction.
+  /// [delta] -1 = fewer columns (bigger cards), +1 = more columns (smaller cards).
+  void _adjustGridDensity(int delta) {
+    try {
+      final provider = context.read<SqliteConfigProvider>();
+      final sizes = ['S', 'M', 'L', 'XL'];
+      final currentIndex = sizes.indexOf(provider.config.systemGridColumns);
+      if (currentIndex == -1) return;
+      final newIndex = (currentIndex + delta).clamp(0, sizes.length - 1);
+      if (newIndex != currentIndex) {
+        provider.updateSystemGridColumns(sizes[newIndex]);
+      }
+    } catch (_) {
+      // Provider may not be available during dispose transitions.
+    }
   }
 
   /// Renders a non-linear grid by manually positioning components according to their spans.
