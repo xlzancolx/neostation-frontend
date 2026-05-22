@@ -4,7 +4,7 @@ import 'package:flutter_localization/flutter_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:neostation/providers/palette_provider.dart';
 import '../../../providers/sqlite_config_provider.dart';
-import 'my_systems_section/my_systems.dart';
+import 'my_systems_section/my_systems_grid.dart';
 import 'my_systems_section/initial_setup_widget.dart';
 
 /// Orchestrator for the 'Systems' tab content.

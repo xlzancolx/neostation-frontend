@@ -114,7 +114,8 @@ class DatabaseTestHelper {
         systems_version TEXT,
         neostation_app_version TEXT,
         auto_update_app INTEGER,
-        auto_update_systems INTEGER
+        auto_update_systems INTEGER,
+        system_grid_columns TEXT DEFAULT 'M'
       )
     ''');
 

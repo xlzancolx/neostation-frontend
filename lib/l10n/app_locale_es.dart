@@ -420,6 +420,7 @@ const Map<String, dynamic> appLocaleEs = {
   AppLocale.ascending: 'Ascendente',
   AppLocale.descending: 'Descendente',
   AppLocale.viewModeGroup: 'MODO DE VISTA',
+  AppLocale.cardSizeGroup: 'TAMAÑO DE CARTA',
   AppLocale.sortByGroup: 'ORDENAR POR',
   AppLocale.orderGroup: 'ORDEN',
   AppLocale.synced: 'Sincronizado',

@@ -97,6 +97,22 @@ class Responsive extends StatelessWidget {
     return getSystemsCrossAxisCount(context);
   }
 
+  /// Convierte el tamaño de card del usuario ('S', 'M', 'L', 'XL') a columnas.
+  static int getSystemsCrossAxisCountFromSize(String size) {
+    switch (size) {
+      case 'S':
+        return 4;
+      case 'M':
+        return 5;
+      case 'L':
+        return 6;
+      case 'XL':
+        return 7;
+      default:
+        return 5;
+    }
+  }
+
   /// Obtener el crossAxisCount para el grid de Apps de Android
   /// 10 para pantallas grandes, menos para pequeñas
   static int getAndroidAppsCrossAxisCount(BuildContext context) {

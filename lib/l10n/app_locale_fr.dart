@@ -427,6 +427,7 @@ const Map<String, dynamic> appLocaleFr = {
   AppLocale.ascending: 'Croissant',
   AppLocale.descending: 'Décroissant',
   AppLocale.viewModeGroup: 'Mode de Vue',
+  AppLocale.cardSizeGroup: 'Taille de Carte',
   AppLocale.sortByGroup: 'Trier par',
   AppLocale.orderGroup: 'Ordre',
   AppLocale.synced: 'Synchronisé',

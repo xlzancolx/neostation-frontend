@@ -71,6 +71,9 @@ class ConfigModel {
   /// Whether to automatically check and prompt for system/emulator config updates on startup.
   final bool autoUpdateSystems;
 
+  /// Preferred grid column density for the systems grid ('S', 'M', 'L', 'XL').
+  final String systemGridColumns;
+
   const ConfigModel({
     this.romFolders = const [],
     this.detectedSystems = const [],
@@ -95,6 +98,7 @@ class ConfigModel {
     this.activeSyncProvider = 'neosync',
     this.autoUpdateApp = true,
     this.autoUpdateSystems = true,
+    this.systemGridColumns = 'M',
   });
 
   /// Convenience getter that returns the primary ROM folder, if any are configured.
@@ -193,6 +197,9 @@ class ConfigModel {
               '1' ||
           (json['autoUpdateSystems'] ?? true).toString().toLowerCase() ==
               'true',
+      systemGridColumns:
+          (json['systemGridColumns'] ?? json['system_grid_columns'] ?? 'M')
+              .toString(),
     );
   }
 
@@ -255,6 +262,7 @@ class ConfigModel {
     String? activeSyncProvider,
     bool? autoUpdateApp,
     bool? autoUpdateSystems,
+    String? systemGridColumns,
   }) {
     return ConfigModel(
       romFolders: romFolders ?? this.romFolders,
@@ -280,6 +288,7 @@ class ConfigModel {
       activeSyncProvider: activeSyncProvider ?? this.activeSyncProvider,
       autoUpdateApp: autoUpdateApp ?? this.autoUpdateApp,
       autoUpdateSystems: autoUpdateSystems ?? this.autoUpdateSystems,
+      systemGridColumns: systemGridColumns ?? this.systemGridColumns,
     );
   }
 

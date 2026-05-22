@@ -407,6 +407,7 @@ const Map<String, dynamic> appLocaleId = {
   AppLocale.ascending: 'Menaik',
   AppLocale.descending: 'Menurun',
   AppLocale.viewModeGroup: 'Mode Tampilan',
+  AppLocale.cardSizeGroup: 'Ukuran Kartu',
   AppLocale.sortByGroup: 'Urutkan Berdasarkan',
   AppLocale.orderGroup: 'Urutan',
   AppLocale.synced: 'Disinkronkan',

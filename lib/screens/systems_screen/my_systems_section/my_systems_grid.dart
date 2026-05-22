@@ -390,7 +390,9 @@ class MySystems extends StatelessWidget {
               bottom: 0.r,
             ),
             child: SystemCardGridView(
-              crossAxisCount: Responsive.getSystemsCrossAxisCount(context),
+              crossAxisCount: Responsive.getSystemsCrossAxisCountFromSize(
+                configProvider.config.systemGridColumns,
+              ),
               childAspectRatio: 8 / 7,
               selectedIndex: selectedIndex,
               onCardTapped: onCardTapped,

@@ -6,7 +6,7 @@ import 'package:neostation/providers/sqlite_config_provider.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 import 'package:neostation/models/config_model.dart';
-import 'package:neostation/services/game_service.dart'; // fallback if GamepadNavigationManager is there
+import 'package:neostation/services/game_service.dart';
 import 'package:neostation/widgets/core_footer.dart';
 import 'package:neostation/l10n/app_locale.dart';
 import 'package:flutter_localization/flutter_localization.dart';
@@ -69,6 +69,9 @@ class HeaderSortDropdownState extends State<HeaderSortDropdown> {
         await configProvider.updateSystemViewMode('grid');
       } else if (result == 'view_carousel') {
         await configProvider.updateSystemViewMode('carousel');
+      } else if (result.startsWith('card_size_')) {
+        final size = result.substring('card_size_'.length);
+        await configProvider.updateSystemGridColumns(size);
       }
     }
   }
@@ -97,7 +100,14 @@ class _DropdownOption {
   final String label;
   final IconData icon;
   final String group;
-  _DropdownOption(this.value, this.label, this.icon, {required this.group});
+  final bool isCardSize;
+  _DropdownOption(
+    this.value,
+    this.label,
+    this.icon, {
+    required this.group,
+    this.isCardSize = false,
+  });
 }
 
 class SortDropdownOverlay extends StatefulWidget {
@@ -118,29 +128,38 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
   late GamepadNavigation _gamepadNav;
   int _selectedIndex = 0;
 
-  final List<GlobalKey> _itemKeys = List.generate(8, (_) => GlobalKey());
-  final GlobalKey _colKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
-  double _indicatorTop = -1;
+
+  /// Index within the card-size row when it is focused. 0=S,1=M,2=L,3=XL
+  int _cardSizeIndex = 1; // default M
 
   @override
   void initState() {
     super.initState();
+    final config = context.read<SqliteConfigProvider>().config;
+    final sizes = ['S', 'M', 'L', 'XL'];
+    final idx = sizes.indexOf(config.systemGridColumns);
+    _cardSizeIndex = idx >= 0 ? idx : 1;
+
     _gamepadNav = GamepadNavigation(
       onNavigateUp: () {
+        final count = _getOptions(context).length;
         setState(() {
-          _selectedIndex = (_selectedIndex - 1 + 8) % 8;
+          _selectedIndex = (_selectedIndex - 1 + count) % count;
         });
-        _updateIndicator();
+        _scrollToSelected();
         SfxService().playNavSound();
       },
       onNavigateDown: () {
+        final count = _getOptions(context).length;
         setState(() {
-          _selectedIndex = (_selectedIndex + 1) % 8;
+          _selectedIndex = (_selectedIndex + 1) % count;
         });
-        _updateIndicator();
+        _scrollToSelected();
         SfxService().playNavSound();
       },
+      onNavigateLeft: _handleNavigateLeft,
+      onNavigateRight: _handleNavigateRight,
       onSelectItem: _handleSelection,
       onBack: () => Navigator.pop(context),
     );
@@ -151,42 +170,85 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
         onActivate: () => _gamepadNav.activate(),
         onDeactivate: () => _gamepadNav.deactivate(),
       );
-      _updateIndicator();
     });
   }
 
-  void _updateIndicator() {
+  void _scrollToSelected() {
     if (!mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final key = _itemKeys[_selectedIndex];
-      final RenderBox? box =
-          key.currentContext?.findRenderObject() as RenderBox?;
-      // _colKey is inside the ScrollView — gives document (scroll-independent) coords
-      final RenderBox? colBox =
-          _colKey.currentContext?.findRenderObject() as RenderBox?;
-      if (box != null && colBox != null) {
-        final offset = box.localToGlobal(Offset.zero, ancestor: colBox);
-        setState(() {
-          _indicatorTop = offset.dy;
-        });
+      final options = _getOptions(context);
+      if (_selectedIndex < 0 || _selectedIndex >= options.length) return;
+
+      // Approximate scroll position based on item height.
+      // Group header = 16.r, divider = 4.r, normal item = 28.r (24+margin), card-size = 32.r (28+margin)
+      double position = 8.r; // top padding
+      for (int i = 0; i < _selectedIndex; i++) {
+        if (options[i].group != (i > 0 ? options[i - 1].group : null)) {
+          position += 16.r; // header
+          if (i > 0) position += 4.r; // divider
+        }
+        position += options[i].isCardSize ? 32.r : 28.r;
       }
-      // Scroll AFTER position is committed so ensureVisible uses the new layout
-      final ctx = key.currentContext;
-      if (ctx != null) {
-        Scrollable.ensureVisible(
-          ctx,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOut,
-          alignment: 0.5,
-        );
+      // add header for current if it's the first of group
+      if (_selectedIndex == 0 ||
+          options[_selectedIndex].group != options[_selectedIndex - 1].group) {
+        position += 16.r;
       }
+
+      _scrollController.animateTo(
+        position.clamp(0.0, _scrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+      );
     });
+  }
+
+  void _handleNavigateLeft() {
+    final options = _getOptions(context);
+    if (_selectedIndex < 0 || _selectedIndex >= options.length) return;
+    final opt = options[_selectedIndex];
+    if (opt.isCardSize) {
+      setState(() {
+        _cardSizeIndex = (_cardSizeIndex - 1 + 4) % 4;
+      });
+      SfxService().playNavSound();
+      _applyCardSize();
+    }
+  }
+
+  void _handleNavigateRight() {
+    final options = _getOptions(context);
+    if (_selectedIndex < 0 || _selectedIndex >= options.length) return;
+    final opt = options[_selectedIndex];
+    if (opt.isCardSize) {
+      setState(() {
+        _cardSizeIndex = (_cardSizeIndex + 1) % 4;
+      });
+      SfxService().playNavSound();
+      _applyCardSize();
+    }
+  }
+
+  void _applyCardSize() {
+    final sizes = ['S', 'M', 'L', 'XL'];
+    final size = sizes[_cardSizeIndex];
+    final configProvider = context.read<SqliteConfigProvider>();
+    configProvider.updateSystemGridColumns(size);
   }
 
   void _handleSelection() {
     final List<_DropdownOption> options = _getOptions(context);
-    Navigator.pop(context, options[_selectedIndex].value);
+    final opt = options[_selectedIndex];
+    if (opt.isCardSize) {
+      _applyCardSize();
+      Navigator.pop(
+        context,
+        'card_size_${['S', 'M', 'L', 'XL'][_cardSizeIndex]}',
+      );
+      return;
+    }
+    Navigator.pop(context, opt.value);
   }
 
   @override
@@ -198,7 +260,8 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
   }
 
   List<_DropdownOption> _getOptions(BuildContext context) {
-    return [
+    final config = context.read<SqliteConfigProvider>().config;
+    final List<_DropdownOption> options = [
       _DropdownOption(
         'view_grid',
         AppLocale.gridView.getString(context),
@@ -211,6 +274,21 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
         Symbols.view_carousel_rounded,
         group: AppLocale.viewModeGroup.getString(context),
       ),
+    ];
+
+    if (config.systemViewMode == 'grid') {
+      options.add(
+        _DropdownOption(
+          'card_size',
+          '',
+          Symbols.crop_free_rounded,
+          group: AppLocale.cardSizeGroup.getString(context),
+          isCardSize: true,
+        ),
+      );
+    }
+
+    options.addAll([
       _DropdownOption(
         'sort_alpha',
         AppLocale.alphabetical.getString(context),
@@ -247,7 +325,9 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
         Symbols.arrow_downward_rounded,
         group: AppLocale.orderGroup.getString(context),
       ),
-    ];
+    ]);
+
+    return options;
   }
 
   List<Widget> _buildItems(ConfigModel config) {
@@ -288,6 +368,106 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
         currentGroup = opt.group;
       }
 
+      if (opt.isCardSize) {
+        final sizes = ['S', 'M', 'L', 'XL'];
+        final currentSizeIndex = sizes.indexOf(config.systemGridColumns);
+        final isFocused = i == _selectedIndex;
+
+        children.add(
+          InkWell(
+            onTap: () {
+              setState(() => _selectedIndex = i);
+            },
+            focusColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            borderRadius: BorderRadius.circular(8.r),
+            child: Container(
+              height: 28.r,
+              margin: EdgeInsets.symmetric(horizontal: 4.r, vertical: 2.r),
+              padding: EdgeInsets.symmetric(horizontal: 12.r),
+              decoration: BoxDecoration(
+                color: isFocused
+                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8.r),
+                border: isFocused
+                    ? Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.3),
+                        width: 1,
+                      )
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Symbols.crop_free_rounded,
+                    size: 14.r,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.9),
+                  ),
+                  SizedBox(width: 8.r),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: sizes.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final size = entry.value;
+                        final isSelected =
+                            (isFocused && idx == _cardSizeIndex) ||
+                            (!isFocused && idx == currentSizeIndex);
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = i;
+                              _cardSizeIndex = idx;
+                            });
+                            SfxService().playNavSound();
+                            _applyCardSize();
+                          },
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          splashColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          borderRadius: BorderRadius.circular(4.r),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.r,
+                              vertical: 2.r,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.secondary
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                            child: Text(
+                              size,
+                              style: TextStyle(
+                                fontSize: 11.r,
+                                fontWeight: FontWeight.w700,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.onSecondary
+                                    : Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        continue;
+      }
+
       bool isSelected = false;
       if (opt.value == 'sort_alpha') {
         isSelected = config.systemSortBy == 'alphabetical';
@@ -307,11 +487,26 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
         isSelected = config.systemViewMode == 'carousel';
       }
 
+      final bool itemIsFocused = i == _selectedIndex;
+
       children.add(
         Container(
-          key: _itemKeys[i],
           height: 24.r,
           margin: EdgeInsets.symmetric(horizontal: 4.r, vertical: 2.r),
+          decoration: BoxDecoration(
+            color: itemIsFocused
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8.r),
+            border: itemIsFocused
+                ? Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
+                    width: 1,
+                  )
+                : null,
+          ),
           child: InkWell(
             onTap: () {
               setState(() => _selectedIndex = i);
@@ -320,7 +515,6 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
             onHover: (v) {
               if (v) {
                 setState(() => _selectedIndex = i);
-                _updateIndicator();
               }
             },
             focusColor: Colors.transparent,
@@ -379,7 +573,6 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
     final config = configProvider.config;
     final screenHeight = MediaQuery.of(context).size.height;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    // dropdown starts at top: 42.r — use all remaining space minus a small bottom margin
     final maxDropdownHeight = screenHeight - 42.r - bottomPadding - 16.r;
 
     return Stack(
@@ -415,42 +608,10 @@ class _SortDropdownOverlayState extends State<SortDropdownOverlay> {
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
-                  // Stack inside ScrollView — _colKey coords are document-space
-                  child: Stack(
-                    key: _colKey,
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: _buildItems(config),
-                      ),
-                      // Indicator inside scroll → scrolls with content, always aligned
-                      if (_indicatorTop >= 0)
-                        AnimatedPositioned(
-                          duration: const Duration(milliseconds: 150),
-                          curve: Curves.easeInOut,
-                          top: _indicatorTop,
-                          left: 4.r,
-                          right: 4.r,
-                          height: 28.r,
-                          child: IgnorePointer(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(8.r),
-                                border: Border.all(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.3),
-                                  width: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: _buildItems(config),
                   ),
                 ),
               ),

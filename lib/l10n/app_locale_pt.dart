@@ -413,6 +413,7 @@ const Map<String, dynamic> appLocalePt = {
   AppLocale.ascending: 'Crescente',
   AppLocale.descending: 'Decrescente',
   AppLocale.viewModeGroup: 'Modo de Visualização',
+  AppLocale.cardSizeGroup: 'Tamanho do Cartão',
   AppLocale.sortByGroup: 'Ordenar por',
   AppLocale.orderGroup: 'Ordem',
   AppLocale.synced: 'Sincronizado',

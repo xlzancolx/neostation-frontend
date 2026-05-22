@@ -157,6 +157,8 @@ class SqliteConfigService {
                 ) ??
                 1) ==
             1,
+        systemGridColumns:
+            userConfig?['system_grid_columns']?.toString() ?? 'M',
       );
     } catch (e) {
       _log.e('Error applying configuration in loadConfig: $e');
@@ -191,6 +193,7 @@ class SqliteConfigService {
         activeSyncProvider: config.activeSyncProvider,
         autoUpdateApp: config.autoUpdateApp ? 1 : 0,
         autoUpdateSystems: config.autoUpdateSystems ? 1 : 0,
+        systemGridColumns: config.systemGridColumns,
       );
 
       await SqliteService.saveUserRomFolders(config.romFolders);

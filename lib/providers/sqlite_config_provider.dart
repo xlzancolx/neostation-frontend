@@ -950,6 +950,13 @@ class SqliteConfigProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Updates the preferred grid column density for the systems grid.
+  Future<void> updateSystemGridColumns(String systemGridColumns) async {
+    _config = _config.copyWith(systemGridColumns: systemGridColumns);
+    await SqliteConfigService.saveConfig(_config);
+    notifyListeners();
+  }
+
   /// Toggles the application's fullscreen state.
   Future<void> updateIsFullscreen(bool value) async {
     _config = _config.copyWith(isFullscreen: value);

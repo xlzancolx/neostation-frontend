@@ -370,6 +370,7 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.ascending: '昇順',
   AppLocale.descending: '降順',
   AppLocale.viewModeGroup: '表示モード',
+  AppLocale.cardSizeGroup: 'カードサイズ',
   AppLocale.sortByGroup: '並べ替え',
   AppLocale.orderGroup: '順序',
   AppLocale.synced: '同期済み',

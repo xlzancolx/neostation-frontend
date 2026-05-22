@@ -413,6 +413,7 @@ mixin AppLocale {
   static const String viewModeGroup = 'view_mode_group';
   static const String sortByGroup = 'sort_by_group';
   static const String orderGroup = 'order_group';
+  static const String cardSizeGroup = 'card_size_group';
   static const String synced = 'synced';
   static const String syncing = 'syncing';
   static const String conflict = 'conflict';

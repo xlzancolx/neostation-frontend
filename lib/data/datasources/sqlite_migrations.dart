@@ -252,6 +252,12 @@ class SqliteMigrations {
       case 82:
         await _migrateToVersion82(db);
         break;
+      case 83:
+        await _migrateToVersion83(db);
+        break;
+      case 84:
+        await _migrateToVersion84(db);
+        break;
       default:
         _log.w('No migration defined for version $version');
     }
@@ -4317,6 +4323,53 @@ class SqliteMigrations {
       _log.i('Migration v77 completed');
     } catch (e, stackTrace) {
       _log.e('Error in migration v77: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Migration to version 83: Add system_grid_columns column to user_config.
+  static Future<void> _migrateToVersion83(Database db) async {
+    _log.i('Migration v83: Adding system_grid_columns to user_config');
+
+    try {
+      final tableInfo = db.select('PRAGMA table_info(user_config)');
+      final columns = tableInfo.map((c) => c['name'].toString()).toList();
+
+      if (!columns.contains('system_grid_columns')) {
+        db.execute(
+          "ALTER TABLE user_config ADD COLUMN system_grid_columns TEXT DEFAULT 'M'",
+        );
+        _log.i('Column system_grid_columns added');
+      } else {
+        _log.i('Column system_grid_columns already exists');
+      }
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v83: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Migration v84: Defensively add system_grid_columns if it still doesn't exist
+  /// (for databases that were already at v83 before the column was introduced).
+  static Future<void> _migrateToVersion84(Database db) async {
+    _log.i('Migration v84: Ensuring system_grid_columns exists in user_config');
+
+    try {
+      final tableInfo = db.select('PRAGMA table_info(user_config)');
+      final columns = tableInfo.map((c) => c['name'].toString()).toList();
+
+      if (!columns.contains('system_grid_columns')) {
+        db.execute(
+          "ALTER TABLE user_config ADD COLUMN system_grid_columns TEXT DEFAULT 'M'",
+        );
+        _log.i('Column system_grid_columns added via v84');
+      } else {
+        _log.i('Column system_grid_columns already exists');
+      }
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v84: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }

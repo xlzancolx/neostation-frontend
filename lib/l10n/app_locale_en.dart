@@ -405,6 +405,7 @@ const Map<String, dynamic> appLocaleEn = {
   AppLocale.ascending: 'Ascending',
   AppLocale.descending: 'Descending',
   AppLocale.viewModeGroup: 'VIEW MODE',
+  AppLocale.cardSizeGroup: 'CARD SIZE',
   AppLocale.sortByGroup: 'SORT BY',
   AppLocale.orderGroup: 'ORDER',
   AppLocale.synced: 'Synced',

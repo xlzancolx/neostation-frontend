@@ -369,6 +369,7 @@ const Map<String, dynamic> appLocaleZhHant = {
   AppLocale.ascending: '升冪',
   AppLocale.descending: '降冪',
   AppLocale.viewModeGroup: '檢視模式',
+  AppLocale.cardSizeGroup: '卡片大小',
   AppLocale.sortByGroup: '排序方式',
   AppLocale.orderGroup: '順序',
   AppLocale.synced: '已同步',

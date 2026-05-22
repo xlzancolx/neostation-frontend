@@ -414,6 +414,7 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.ascending: 'По возрастанию',
   AppLocale.descending: 'По убыванию',
   AppLocale.viewModeGroup: 'РЕЖИМ ПРОСМОТРА',
+  AppLocale.cardSizeGroup: 'РАЗМЕР КАРТОЧКИ',
   AppLocale.sortByGroup: 'СОРТИРОВАТЬ ПО',
   AppLocale.orderGroup: 'ПОРЯДОК',
   AppLocale.synced: 'Синхронизировано',

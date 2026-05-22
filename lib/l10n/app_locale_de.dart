@@ -422,6 +422,7 @@ const Map<String, dynamic> appLocaleDe = {
   AppLocale.ascending: 'Aufsteigend',
   AppLocale.descending: 'Absteigend',
   AppLocale.viewModeGroup: 'Ansichtsmodus',
+  AppLocale.cardSizeGroup: 'Kartengröße',
   AppLocale.sortByGroup: 'Sortieren nach',
   AppLocale.orderGroup: 'Reihenfolge',
   AppLocale.synced: 'Synchronisiert',
