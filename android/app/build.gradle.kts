@@ -1,111 +1,45 @@
-import java.util.Properties
-
 plugins {
     id("com.android.application")
-    id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val localProperties = Properties()
-val localPropertiesFile = rootProject.file("local.properties")
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.inputStream().use { localProperties.load(it) }
-}
-
-val flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
-val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
-
-// Helper to read keystore config from environment variables or key.properties.
-fun loadKeystoreConfig(): Map<String, String?> {
-    val envStorePassword = System.getenv("KEYSTORE_PASSWORD")
-    val envKeyPassword = System.getenv("KEY_PASSWORD")
-    val envKeyAlias = System.getenv("KEY_ALIAS")
-    val envKeyStorePath = System.getenv("KEYSTORE_PATH")
-
-    val propsFile = rootProject.file("key.properties")
-    val props = Properties()
-    if (propsFile.exists()) {
-        propsFile.inputStream().use { props.load(it) }
-    }
-
-    return mapOf(
-        "storePassword" to (envStorePassword?.takeIf { it.isNotBlank() } ?: props.getProperty("storePassword")?.takeIf { it.isNotBlank() }),
-        "keyPassword" to (envKeyPassword?.takeIf { it.isNotBlank() } ?: props.getProperty("keyPassword")?.takeIf { it.isNotBlank() }),
-        "keyAlias" to (envKeyAlias?.takeIf { it.isNotBlank() } ?: props.getProperty("keyAlias")?.takeIf { it.isNotBlank() } ?: "upload"),
-        "storeFile" to (envKeyStorePath?.takeIf { it.isNotBlank() } ?: props.getProperty("storeFile")?.takeIf { it.isNotBlank() } ?: "release.jks"),
-    )
-}
-
 android {
     namespace = "com.neogamelab.neostation"
-    compileSdk = 36
-    ndkVersion = "27.0.12077973"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
-
-    sourceSets {
-        getByName("main").java.srcDirs("src/main/kotlin")
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     defaultConfig {
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.neogamelab.neostation"
+        // You can update the following values to match your application needs.
+        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 36
-        versionCode = flutterVersionCode.toInt()
-        versionName = flutterVersionName
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
     }
 
     buildTypes {
         release {
-            val keystore = loadKeystoreConfig()
-            val storeFilePath = keystore["storeFile"]!!
-            val storePass = keystore["storePassword"]
-
-            // Only sign with release keystore if credentials and file are present.
-            // Otherwise fall back to debug signing (sideloading / no store).
-            if (storePass != null && file(storeFilePath).exists()) {
-                signingConfig = signingConfigs.create("release") {
-                    storePassword = storePass
-                    keyPassword = keystore["keyPassword"] ?: storePass
-                    keyAlias = keystore["keyAlias"]!!
-                    storeFile = file(storeFilePath)
-                }
-            } else {
-                signingConfig = signingConfigs.getByName("debug")
-            }
-
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android.txt"),
-                "proguard-rules.pro"
-            )
-
-            ndk {
-                debugSymbolLevel = "SYMBOL_TABLE"
-            }
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
 
-    packaging {
-        jniLibs {
-            useLegacyPackaging = false
-        }
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
 flutter {
     source = "../.."
-}
-
-dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${project.property("kotlin_version")}")
 }
