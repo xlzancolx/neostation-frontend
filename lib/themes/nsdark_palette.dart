@@ -8,7 +8,7 @@ const Color _tertiaryColor = Color(0xFFE0E5FF);
 const Color _onTertiaryColor = Color(0xFF252029);
 final Color _surfaceColor = HSLColor.fromColor(
   const Color(0xFF232030),
-).withLightness(0.25).toColor();
+).withLightness(0.18).toColor();
 const Color _onSurfaceColor = Color(0xFF9B9BB4);
 
 const Color _outlineColor = Color(0xFF50495A);

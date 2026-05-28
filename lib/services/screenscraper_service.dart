@@ -920,6 +920,7 @@ class ScreenScraperService {
     String relativePath,
     String userDataDir, {
     bool forceOverwrite = false,
+    int? maxDailyRequests,
   }) async {
     try {
       final fullPath = path.join(userDataDir, relativePath);
@@ -928,7 +929,12 @@ class ScreenScraperService {
         return true;
       }
 
-      final response = await _httpClient.get(Uri.parse(url));
+      final response = await _httpGetWithRetry(
+        Uri.parse(url),
+        timeout: const Duration(seconds: 60),
+        maxRetries: 2,
+        maxDailyRequests: maxDailyRequests,
+      );
       if (response.statusCode == 200) {
         await file.create(recursive: true);
         await file.writeAsBytes(response.bodyBytes);
@@ -955,6 +961,7 @@ class ScreenScraperService {
     Function(double progress)? onProgress,
     List<String>? allowedMediaTypes,
     bool forceOverwrite = false,
+    int? maxDailyRequests,
   }) async {
     if (medias.isEmpty) {
       return {
@@ -1025,6 +1032,7 @@ class ScreenScraperService {
           task['relativePath'],
           userDataDir,
           forceOverwrite: forceOverwrite,
+          maxDailyRequests: maxDailyRequests,
         );
         return {
           'mediaType': task['mediaType'],
@@ -1151,6 +1159,7 @@ class ScreenScraperService {
         preferredLanguage: preferredLanguage,
         allowedMediaTypes: allowedMediaTypes,
         forceOverwrite: forceOverwrite,
+        maxDailyRequests: null,
         onProgress: (p) =>
             onProgress?.call(AppLocale.downloadingImages, 0.2 + (p * 0.8)),
       );
@@ -1448,6 +1457,7 @@ class ScreenScraperService {
             preferredLanguage: preferredLanguage,
             shouldCancel: shouldCancel,
             allowedMediaTypes: allowedTypes,
+            maxDailyRequests: maxDailyRequests,
           );
           if (res['cancelled'] == true) {
             return {
@@ -1506,13 +1516,7 @@ class ScreenScraperService {
         bool found = false;
         for (final ext in ['.png', '.jpg', '.jpeg', '.mp4', '.webm']) {
           if (await File(
-            path.join(
-              userDataDir,
-              'media',
-              systemFolder,
-              type,
-              '$romBaseName$ext',
-            ),
+            path.join(userDataDir, systemFolder, type, '$romBaseName$ext'),
           ).exists()) {
             existing.add(type);
             found = true;

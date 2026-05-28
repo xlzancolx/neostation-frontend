@@ -6,7 +6,9 @@ const Color _secondaryColor = Color(0xFF26A780);
 const Color _onSecondaryColor = Color(0xFFFFFFFF);
 const Color _tertiaryColor = Color(0xFF575463);
 const Color _onTertiaryColor = Color(0xFF625875);
-const Color _surfaceColor = Color(0xFFDFDDE4);
+final Color _surfaceColor = HSLColor.fromColor(
+  const Color(0xFFDFDDE4),
+).withLightness(0.9).toColor();
 const Color _onSurfaceColor = Color(0xFF5A5875);
 const Color _errorColor = Color(0xFFFF5252);
 const Color _onErrorColor = Color(0xFFFFFFFF);

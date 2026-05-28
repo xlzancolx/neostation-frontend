@@ -58,9 +58,6 @@ class _GamesGridState extends State<GamesGrid> {
   DateTime? _lastNavTime;
   static const Duration _fastNavThreshold = Duration(milliseconds: 150);
 
-  static const double _spX = 12;
-  static const double _spY = 14;
-
   // Layout
   List<_CardRect> _cardRects = [];
   double _contentHeight = 0;
@@ -80,10 +77,7 @@ class _GamesGridState extends State<GamesGrid> {
     if (_imageSizeCache.containsKey(path)) return _imageSizeCache[path];
     try {
       final file = File(path);
-      if (!file.existsSync()) {
-        _imageSizeCache[path] = null;
-        return null;
-      }
+      if (!file.existsSync()) return null;
       final raf = file.openSync();
       try {
         final header = Uint8List(24);
@@ -127,7 +121,6 @@ class _GamesGridState extends State<GamesGrid> {
         raf.closeSync();
       }
     } catch (_) {}
-    _imageSizeCache[path] = null;
     return null;
   }
 
@@ -198,8 +191,11 @@ class _GamesGridState extends State<GamesGrid> {
     _lastLayoutCols = _cols;
     _lastLayoutGameCount = widget.games.length;
 
+    final spX = availableWidth * 0.022;
+    final spY = availableWidth * 0.022;
+
     final totalWidth = availableWidth - 16;
-    _cardWidth = (totalWidth - (_cols - 1) * _spX) / _cols;
+    _cardWidth = (totalWidth - (_cols - 1) * spX) / _cols;
     final n = widget.games.length;
     _cardRects = List.generate(
       n,
@@ -221,14 +217,14 @@ class _GamesGridState extends State<GamesGrid> {
         final col = idx % _cols;
         final h = _cardHeightFor(idx);
         _cardRects[idx] = _CardRect(
-          left: col * (_cardWidth + _spX),
+          left: col * (_cardWidth + spX),
           top: y + (maxH - h) / 2,
           width: _cardWidth,
           height: h,
         );
         if (_imageSizeCache.containsKey(_box2dPath(idx))) _loadedDims.add(idx);
       }
-      y += maxH + _spY;
+      y += maxH + spY;
       i = end;
     }
     _contentHeight = y + 80;
@@ -296,6 +292,14 @@ class _GamesGridState extends State<GamesGrid> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _updateCrossAxisCount();
+  }
+
+  @override
+  void didUpdateWidget(GamesGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.games != oldWidget.games) {
+      _lastLayoutWidth = null;
+    }
   }
 
   void _initializeGamepad() {
@@ -394,8 +398,9 @@ class _GamesGridState extends State<GamesGrid> {
   }
 
   void _onSelectionChanged() {
-    if (_selectedIndex < widget.games.length)
+    if (_selectedIndex < widget.games.length) {
       widget.onGameSelected(widget.games[_selectedIndex]);
+    }
   }
 
   void _updateFastNav() {
@@ -507,9 +512,9 @@ class _GamesGridState extends State<GamesGrid> {
                               decoration: BoxDecoration(
                                 border: Border.all(
                                   color: theme.colorScheme.secondary,
-                                  width: 2.6.r,
+                                  width: 3.r,
                                 ),
-                                borderRadius: BorderRadius.circular(6.r),
+                                borderRadius: BorderRadius.circular(8.r),
                               ),
                             ),
                           ),
@@ -552,11 +557,14 @@ class _GamesGridState extends State<GamesGrid> {
         child: RepaintBoundary(
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6.r),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.25),
-                width: 1.r,
-              ),
+              borderRadius: BorderRadius.circular(8.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 4.r,
+                  offset: Offset(2.r, 2.r),
+                ),
+              ],
             ),
             clipBehavior: Clip.antiAlias,
             child: _GameCardImage(
@@ -750,12 +758,13 @@ class _GameCardImageState extends State<_GameCardImage> {
     setState(() {
       _checked = true;
       _exists = exists;
-      if (exists)
+      if (exists) {
         _imageProvider = ResizeImage(
           FileImage(File(widget.box2dPath)),
           width: widget.targetWidth,
           allowUpscaling: false,
         );
+      }
     });
   }
 
@@ -791,7 +800,7 @@ class _Placeholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(6.r),
       ),
       child: Center(
