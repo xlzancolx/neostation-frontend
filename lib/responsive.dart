@@ -101,15 +101,15 @@ class Responsive extends StatelessWidget {
   static int getSystemsCrossAxisCountFromSize(String size) {
     switch (size) {
       case 'S':
-        return 4;
-      case 'M':
-        return 5;
-      case 'L':
-        return 6;
-      case 'XL':
         return 7;
-      default:
+      case 'M':
+        return 6;
+      case 'L':
         return 5;
+      case 'XL':
+        return 4;
+      default:
+        return 6;
     }
   }
 

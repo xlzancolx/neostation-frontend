@@ -754,6 +754,10 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
   static const double _maxPull = 75.0;
   bool _pullReady = false;
 
+  /// Floating card size label shown briefly after pinch-to-zoom.
+  final ValueNotifier<String?> _cardSizeLabel = ValueNotifier(null);
+  Timer? _cardSizeLabelTimer;
+
   SecondaryDisplayState? _secondaryDisplayState;
 
   final Map<String, String?> _themeBackgrounds = {};
@@ -793,12 +797,9 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
         _ensureSelectedItemVisibleUniversal();
       }
       _loadThemeAssetsForSystems();
-      // Explicitly check current shared state in case secondary was already
-      // active before we subscribed (listener only fires on changes, not on
-      // the initial value already present in SharedState).
       _onSecondaryStateChanged();
-      // Also attempt direct update — works when secondary is already connected.
       _updateSecondaryScreenName();
+      _precacheSystemBackgrounds();
     });
   }
 
@@ -860,6 +861,63 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
         ..clear()
         ..addAll(newLogos);
     });
+  }
+
+  void _precacheSystemBackgrounds() {
+    if (!mounted) return;
+    final systems = _toSystemCards(widget.systems);
+    for (final sys in systems) {
+      if (sys.isGame) {
+        final wheel = sys.customWheelImage;
+        if (wheel != null && wheel.isNotEmpty) {
+          final file = File(wheel);
+          if (file.existsSync()) {
+            precacheImage(ResizeImage(FileImage(file), width: 256), context);
+          }
+        }
+        final customBg = sys.customBackgroundPath;
+        if (customBg != null && customBg.isNotEmpty) {
+          final file = File(customBg);
+          if (file.existsSync()) {
+            precacheImage(ResizeImage(FileImage(file), width: 1024), context);
+          }
+        }
+      } else {
+        final customBg = sys.customBackgroundPath;
+        if (customBg != null && customBg.isNotEmpty) {
+          final file = File(customBg);
+          if (file.existsSync()) {
+            precacheImage(ResizeImage(FileImage(file), width: 512), context);
+          }
+        } else {
+          final folderName = sys.primaryFolderName ?? sys.folderName ?? '';
+          final themeBg = _themeBackgrounds[folderName];
+          if (themeBg != null && themeBg.isNotEmpty) {
+            final file = File(themeBg);
+            if (file.existsSync()) {
+              precacheImage(ResizeImage(FileImage(file), width: 512), context);
+            }
+          }
+        }
+
+        final customLogo = sys.customLogoPath;
+        if (customLogo != null && customLogo.isNotEmpty) {
+          final file = File(customLogo);
+          if (file.existsSync()) {
+            precacheImage(ResizeImage(FileImage(file), width: 512), context);
+          }
+        } else {
+          final folderName = sys.primaryFolderName ?? sys.folderName ?? '';
+          final themeLogo = _themeLogos[folderName];
+          if (themeLogo != null && themeLogo.isNotEmpty) {
+            final file = File(themeLogo);
+            if (file.existsSync()) {
+              precacheImage(ResizeImage(FileImage(file), width: 512), context);
+            }
+          }
+        }
+      }
+    }
   }
 
   /// Synchronizes the current selection with the secondary hardware display.
@@ -962,6 +1020,8 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
 
   @override
   void dispose() {
+    _cardSizeLabelTimer?.cancel();
+    _cardSizeLabel.dispose();
     _secondaryDisplayState?.removeListener(_onSecondaryStateChanged);
     _cleanupGamepad();
     _scrollController.dispose();
@@ -1364,6 +1424,44 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
                 );
               },
             ),
+            ValueListenableBuilder<String?>(
+              valueListenable: _cardSizeLabel,
+              builder: (context, label, child) {
+                return AnimatedOpacity(
+                  opacity: label != null ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    child: Center(
+                      child: label != null
+                          ? Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20.r,
+                                vertical: 10.r,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(24.r),
+                              ),
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
+                                  fontSize: 18.r,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 2.r,
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         );
       },
@@ -1390,13 +1488,11 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
     if (_lastPinchDistance != null) {
       final deltaDistance = distance - _lastPinchDistance!;
       if (deltaDistance > 35) {
-        // Fingers spreading apart → bigger cards → fewer columns
-        _adjustGridDensity(-1);
+        _adjustGridDensity(1);
         _lastPinchDistance = distance;
         _lastPinchTime = now;
       } else if (deltaDistance < -35) {
-        // Fingers coming together → smaller cards → more columns
-        _adjustGridDensity(1);
+        _adjustGridDensity(-1);
         _lastPinchDistance = distance;
         _lastPinchTime = now;
       }
@@ -1443,7 +1539,6 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
   }
 
   /// Adjusts grid column density based on pinch gesture direction.
-  /// [delta] -1 = fewer columns (bigger cards), +1 = more columns (smaller cards).
   void _adjustGridDensity(int delta) {
     try {
       final provider = context.read<SqliteConfigProvider>();
@@ -1452,11 +1547,19 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
       if (currentIndex == -1) return;
       final newIndex = (currentIndex + delta).clamp(0, sizes.length - 1);
       if (newIndex != currentIndex) {
-        provider.updateSystemGridColumns(sizes[newIndex]);
+        final newSize = sizes[newIndex];
+        provider.updateSystemGridColumns(newSize);
+        _showCardSizeLabel(newSize);
       }
-    } catch (_) {
-      // Provider may not be available during dispose transitions.
-    }
+    } catch (_) {}
+  }
+
+  void _showCardSizeLabel(String size) {
+    _cardSizeLabelTimer?.cancel();
+    _cardSizeLabel.value = size;
+    _cardSizeLabelTimer = Timer(const Duration(milliseconds: 1200), () {
+      _cardSizeLabel.value = null;
+    });
   }
 
   /// Renders a non-linear grid by manually positioning components according to their spans.

@@ -269,19 +269,19 @@ class _GamesGridState extends State<GamesGrid> {
       final config = context.read<SqliteConfigProvider>().config;
       switch (config.systemGridColumns) {
         case 'S':
-          _crossAxisCount = 4;
-          break;
-        case 'M':
-          _crossAxisCount = 5;
-          break;
-        case 'L':
-          _crossAxisCount = 6;
-          break;
-        case 'XL':
           _crossAxisCount = 7;
           break;
-        default:
+        case 'M':
+          _crossAxisCount = 6;
+          break;
+        case 'L':
           _crossAxisCount = 5;
+          break;
+        case 'XL':
+          _crossAxisCount = 4;
+          break;
+        default:
+          _crossAxisCount = 6;
       }
     } catch (_) {
       _crossAxisCount = 5;
