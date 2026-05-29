@@ -27,7 +27,7 @@ modules:
       build-args:
         - --share=network
     build-commands:
-      - export PATH=$PWD/flutter/bin:$PATH
+      - export PATH=$PWD/flutter-sdk/bin:$PATH
       - flutter config --no-analytics
       - flutter precache --linux --no-android --no-web --no-ios --no-macos --no-windows
       - flutter pub get
@@ -48,5 +48,5 @@ modules:
       - type: archive
         url: https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.44.0-stable.tar.xz
         sha256: PLACEHOLDER_RUN_get-flutter-sha256.sh
-        dest: .
-        strip-components: 0
+        dest: flutter-sdk
+        strip-components: 1
