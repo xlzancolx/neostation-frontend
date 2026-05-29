@@ -1,0 +1,64 @@
+name: Flatpak Build (Validate)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'linux/flatpak/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'lib/**'
+      - 'linux/**'
+      - 'packages/**'
+      - '.github/workflows/flatpak-build.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'linux/flatpak/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'lib/**'
+      - 'linux/**'
+      - 'packages/**'
+  workflow_dispatch:
+
+jobs:
+  flatpak:
+    name: Build Flatpak
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub/flatpak-builder:latest
+      options: --privileged
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Update Flutter SHA256
+        run: |
+          bash linux/flatpak/get-flutter-sha256.sh
+
+      - name: Validate metainfo
+        run: |
+          flatpak run org.freedesktop.appstream-glib validate \
+            linux/flatpak/com.neogamelab.neostation.metainfo.xml
+
+      - name: Validate desktop file
+        run: |
+          desktop-file-validate linux/flatpak/com.neogamelab.neostation.desktop
+
+      - name: Build Flatpak
+        run: |
+          flatpak-builder --user --install-deps-from=flathub \
+            --repo=repo --force-clean \
+            build-dir linux/flatpak/com.neogamelab.neostation.yml
+
+      - name: Export Flatpak bundle
+        run: |
+          flatpak build-bundle repo neostation.flatpak com.neogamelab.neostation
+
+      - name: Upload Flatpak artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: neostation-flatpak
+          path: neostation.flatpak
+          if-no-files-found: error

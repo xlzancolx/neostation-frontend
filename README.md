@@ -37,7 +37,7 @@ NeoStation provides a fast, lightweight, and customizable experience for managin
 | Platform | Status | Notes |
 |----------|--------|-------|
 | Windows | ✅ Supported | x64 |
-| Linux | ✅ Supported | x64, ARM64 |
+| Linux | ✅ Supported | x64, ARM64 (AppImage, Flatpak) |
 | macOS | ✅ Supported | Apple Silicon & Intel |
 | Android | ✅ Supported | ARM64, Android TV compatible |
 
@@ -49,6 +49,17 @@ NeoStation provides a fast, lightweight, and customizable experience for managin
 - RetroArch or standalone emulators
 
 ## Installation
+
+### Linux (Flatpak)
+
+```bash
+# Coming soon to Flathub! In the meantime, you can build locally:
+flatpak-builder --user --install-deps-from=flathub \
+  --repo=repo --force-clean \
+  build-dir linux/flatpak/com.neogamelab.neostation.yml
+```
+
+### Build from source
 
 ```bash
 # Clone the repository
