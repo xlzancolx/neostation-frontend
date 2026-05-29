@@ -139,39 +139,45 @@ void process_connection_event(gamepad::GamepadInfo* gamepad) {
 }
 
 void event_loop_start() {
-  connection_listener::listen(
-      &keep_reading_events,
-      [](const connection_listener::ConnectionEvent& event) {
-        std::string key = event.device_id;
-        std::optional<gamepad::GamepadInfo> existingGamepad = gamepads[key];
-        if (event.type == connection_listener::ConnectionEventType::CONNECTED) {
-          if (existingGamepad && existingGamepad->alive) {
-            std::cout << "Existing gamepad found; skipping" << std::endl;
-            return;
-          }
+  try {
+    connection_listener::listen(
+        &keep_reading_events,
+        [](const connection_listener::ConnectionEvent& event) {
+          std::string key = event.device_id;
+          std::optional<gamepad::GamepadInfo> existingGamepad = gamepads[key];
+          if (event.type == connection_listener::ConnectionEventType::CONNECTED) {
+            if (existingGamepad && existingGamepad->alive) {
+              std::cout << "Existing gamepad found; skipping" << std::endl;
+              return;
+            }
 
-          std::optional<gamepad::GamepadInfo> info =
-              gamepad::get_gamepad_info(key);
-          if (!info) {
-            std::cerr << "Unable to open joystick for reading " << key
+            std::optional<gamepad::GamepadInfo> info =
+                gamepad::get_gamepad_info(key);
+            if (!info) {
+              std::cerr << "Unable to open joystick for reading " << key
+                        << std::endl;
+              return;
+            }
+
+            std::cout << "Gamepad connected " << key << " - " << info->name
                       << std::endl;
-            return;
-          }
+            gamepads[key] = *info;
 
-          std::cout << "Gamepad connected " << key << " - " << info->name
-                    << std::endl;
-          gamepads[key] = *info;
-
-          std::thread input_thread(process_connection_event, &gamepads[key]);
-          input_thread.detach();
-        } else {
-          std::cout << "Gamepad disconnected " << key << std::endl;
-          if (existingGamepad) {
-            gamepads[key].alive = false;
-            gamepads.erase(key);
+            std::thread input_thread(process_connection_event, &gamepads[key]);
+            input_thread.detach();
+          } else {
+            std::cout << "Gamepad disconnected " << key << std::endl;
+            if (existingGamepad) {
+              gamepads[key].alive = false;
+              gamepads.erase(key);
+            }
           }
-        }
-      });
+        });
+  } catch (const std::exception& e) {
+    std::cerr << "Gamepad event loop failed: " << e.what() << std::endl;
+  } catch (...) {
+    std::cerr << "Gamepad event loop failed with unknown error" << std::endl;
+  }
 }
 
 static void gamepads_linux_plugin_dispose(GObject* object) {

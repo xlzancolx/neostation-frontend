@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:neostation/services/logger_service.dart';
 import '../models/retro_achievements_user.dart';
@@ -9,11 +10,17 @@ import '../models/retro_achievements_gotw.dart';
 /// Service for interacting with the RetroAchievements API.
 ///
 /// Provides access to user profiles, game achievements, and global community
-/// events like "Achievement of the Week". Requires a valid API key provided
-/// via `--dart-define=RA_API_KEY=...`.
+/// events like "Achievement of the Week". Requires a valid API key — either
+/// passed at build time via `--dart-define=RA_API_KEY=...` or set as a
+/// runtime environment variable (`RA_API_KEY`).
 class RetroAchievementsService {
   static const String _baseUrl = 'https://retroachievements.org/API';
-  static const String _apiKey = String.fromEnvironment('RA_API_KEY');
+  static String get _apiKey {
+    const compileTime = String.fromEnvironment('RA_API_KEY');
+    if (compileTime.isNotEmpty) return compileTime;
+    return Platform.environment['RA_API_KEY'] ?? '';
+  }
+
   static final _log = LoggerService.instance;
 
   /// Fetches the "Achievement of the Week" (GOTW) data.

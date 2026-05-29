@@ -36,8 +36,10 @@ void _list_existing(
   DIR* dir = opendir(_input_dir.c_str());
 
   if (!dir) {
-    std::cerr << "Failed to open directory: " << _input_dir << std::endl;
-    throw std::runtime_error("Error reading existing connections");
+    std::cerr << "Failed to open directory: " << _input_dir
+              << " (permission denied or directory missing) — "
+              << "gamepad detection disabled" << std::endl;
+    return;
   }
 
   struct dirent* entry;
@@ -68,7 +70,7 @@ void _wait_for_connections(
   ssize_t len = read(inotify, buffer, sizeof(buffer));
   if (len < 0) {
     std::cerr << "Error reading inotify events" << std::endl;
-    throw std::runtime_error("Error reading inotify events");
+    return;
   }
 
   char* ptr = buffer;
@@ -99,15 +101,17 @@ void listen(const bool* keep_reading,
 
   int inotify = inotify_init();
   if (inotify == -1) {
-    std::cerr << "Error initializing inotify" << std::endl;
-    throw std::runtime_error("Error initializing inotify");
+    std::cerr << "Error initializing inotify — "
+              << "gamepad hotplug detection disabled" << std::endl;
+    return;
   }
   int watcher = inotify_add_watch(inotify, _input_dir.c_str(),
                                   IN_CREATE | IN_DELETE | IN_ATTRIB);
   if (watcher == -1) {
     close(inotify);
-    std::cerr << "Error adding watch for " << _input_dir << std::endl;
-    throw std::runtime_error("Error adding inotify watch");
+    std::cerr << "Error adding watch for " << _input_dir << " — "
+              << "gamepad hotplug detection disabled" << std::endl;
+    return;
   }
 
   std::cout << "Listening for gamepads..." << std::endl;

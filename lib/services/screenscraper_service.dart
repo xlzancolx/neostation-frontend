@@ -91,11 +91,19 @@ class ScreenScraperService {
     return _buildRegionPriorityMap(_defaultRegionOrder);
   }
 
-  // Developer credentials — provided at build time via --dart-define.
-  static const String _devId = String.fromEnvironment('SCREENSCRAPER_DEV_ID');
-  static const String _devPassword = String.fromEnvironment(
-    'SCREENSCRAPER_DEV_PASSWORD',
-  );
+  // Developer credentials — provided at build time via --dart-define
+  // or at runtime via environment variables.
+  static String get _devId {
+    const compileTime = String.fromEnvironment('SCREENSCRAPER_DEV_ID');
+    if (compileTime.isNotEmpty) return compileTime;
+    return Platform.environment['SCREENSCRAPER_DEV_ID'] ?? '';
+  }
+
+  static String get _devPassword {
+    const compileTime = String.fromEnvironment('SCREENSCRAPER_DEV_PASSWORD');
+    if (compileTime.isNotEmpty) return compileTime;
+    return Platform.environment['SCREENSCRAPER_DEV_PASSWORD'] ?? '';
+  }
 
   static String? _appVersion;
 
