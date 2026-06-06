@@ -11,13 +11,11 @@ import 'package:neostation/providers/sqlite_config_provider.dart';
 import 'package:neostation/providers/system_background_provider.dart';
 import 'package:neostation/services/game_service.dart';
 import 'package:neostation/services/sfx_service.dart';
-import 'package:neostation/utils/game_utils.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 import 'package:neostation/screens/app_screen.dart';
 import 'package:neostation/widgets/game_view_mode_dropdown.dart';
 import 'package:neostation/widgets/native_carousel.dart';
 import 'package:neostation/widgets/game_view_footer.dart';
-import 'package:neostation/l10n/app_locale.dart';
 
 class GamesCarousel extends StatefulWidget {
   final SystemModel system;
@@ -27,6 +25,7 @@ class GamesCarousel extends StatefulWidget {
   final Function(GameModel) onGameSelected;
   final VoidCallback onBack;
   final VoidCallback onPlay;
+  final VoidCallback? onFavorite;
   final VoidCallback? onRandom;
   final VoidCallback? onSettings;
 
@@ -39,6 +38,7 @@ class GamesCarousel extends StatefulWidget {
     required this.onGameSelected,
     required this.onBack,
     required this.onPlay,
+    this.onFavorite,
     this.onRandom,
     this.onSettings,
   });
@@ -135,9 +135,19 @@ class _GamesCarouselState extends State<GamesCarousel> {
     return null;
   }
 
+  static const String _favoritesLabel = '★';
+
+  bool get _hasFavoriteGames =>
+      widget.games.any((g) => g.isFavorite == true);
+
   List<String> get _uniqueLetters {
     final letters = <String>[];
+    if (_hasFavoriteGames) {
+      letters.add(_favoritesLabel);
+    }
     for (final game in widget.games) {
+      if (game.isFavorite == true) continue;
+
       final displayName = game.name.isNotEmpty ? game.name : game.realname;
       final letter = displayName.isNotEmpty
           ? displayName[0].toUpperCase()
@@ -150,12 +160,22 @@ class _GamesCarouselState extends State<GamesCarousel> {
   }
 
   String _getLetterForGame(GameModel game) {
+    if (game.isFavorite == true) return _favoritesLabel;
+
     final displayName = game.name.isNotEmpty ? game.name : game.realname;
     return displayName.isNotEmpty ? displayName[0].toUpperCase() : '#';
   }
 
   int _getFirstGameIndexForLetter(String letter) {
+    if (letter == _favoritesLabel) {
+      for (int i = 0; i < widget.games.length; i++) {
+        if (widget.games[i].isFavorite == true) return i;
+      }
+      return 0;
+    }
+
     for (int i = 0; i < widget.games.length; i++) {
+      if (widget.games[i].isFavorite == true) continue;
       if (_getLetterForGame(widget.games[i]) == letter) return i;
     }
     return 0;
@@ -219,6 +239,7 @@ class _GamesCarouselState extends State<GamesCarousel> {
         }
       },
       onBack: widget.onBack,
+      onFavorite: widget.onFavorite,
       onXButton: () {
         try {
           GameViewModeDropdown.globalKey.currentState?.showDropdown();
@@ -377,15 +398,6 @@ class _GamesCarouselState extends State<GamesCarousel> {
         (widget.system.shortName != null && widget.system.shortName!.isNotEmpty)
         ? widget.system.shortName!
         : widget.system.realName;
-    final selGame = _currentIndex < widget.games.length
-        ? widget.games[_currentIndex]
-        : null;
-    final selName = selGame != null
-        ? GameUtils.formatGameName(
-            selGame.name.isNotEmpty ? selGame.name : selGame.romname,
-          )
-        : '';
-
     return Container(
       margin: EdgeInsets.only(left: 8.r, right: 8.r, top: 8.r, bottom: 4.r),
       child: Row(
@@ -442,20 +454,6 @@ class _GamesCarouselState extends State<GamesCarousel> {
               ),
             ),
           ),
-          if (selName.isNotEmpty) ...[
-            SizedBox(width: 10.r),
-            Expanded(
-              child: Text(
-                selName,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12.r,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -808,11 +806,12 @@ class _GamesCarouselState extends State<GamesCarousel> {
             initialIndex: _currentIndex.clamp(0, widget.games.length - 1),
             itemBuilder: (context, index) {
               final game = widget.games[index];
-              if (isFanart) {
-                return _buildFanartCard(game, index == _currentIndex);
-              } else {
-                return _buildBoxCard(game, index == _currentIndex);
-              }
+              return KeyedSubtree(
+                key: ValueKey(game.romname),
+                child: isFanart
+                    ? _buildFanartCard(game, index == _currentIndex)
+                    : _buildBoxCard(game, index == _currentIndex),
+              );
             },
             onPageChanged: _onPageChanged,
           ),

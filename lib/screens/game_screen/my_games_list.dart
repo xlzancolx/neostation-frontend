@@ -1606,7 +1606,14 @@ class _SystemGamesListState extends State<SystemGamesList> {
       return;
     }
 
-    _gamepadNav.deactivate();
+    // Push a manager layer to deactivate the current active gamepad layer
+    // (games_grid / games_carousel / system_games_list) so the random dialog
+    // can capture back input without it leaking through to the parent.
+    GamepadNavigationManager.pushLayer(
+      'random_dialog',
+      onActivate: () {},
+      onDeactivate: () {},
+    );
 
     showDialog(
       context: context,
@@ -1643,8 +1650,8 @@ class _SystemGamesListState extends State<SystemGamesList> {
       // Wait a bit to prevent the button press from being processed twice
       await Future.delayed(const Duration(milliseconds: 100));
       if (mounted) {
-        // Reactivar navegación
-        _gamepadNav.activate();
+        // Pop the dialog layer to reactivate the previous gamepad layer.
+        GamepadNavigationManager.popLayer('random_dialog');
       }
     });
   }
@@ -2414,6 +2421,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
       },
       onBack: _goBack,
       onPlay: _selectCurrentGame,
+      onFavorite: _toggleFavorite,
       onRandom: _showRandomGameDialog,
       onSettings: _handleStartButton,
     );
@@ -2421,12 +2429,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
 
   /// Builds the game grid view with box-2d images.
   Widget _buildGamesGrid() {
-    final cardStyle = context
-        .read<SqliteConfigProvider>()
-        .config
-        .gameCarouselCardStyle;
     return GamesGrid(
-      key: ValueKey('games_grid_$cardStyle'),
       system: widget.system,
       games: _games,
       selectedIndex: _selectedGameIndex,

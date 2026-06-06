@@ -796,7 +796,7 @@ class _GamesGridState extends State<GamesGrid> {
     final box2dPath = game.getImagePath(systemFolder, 'box2d', fp);
 
     return GestureDetector(
-      key: ValueKey('card_${game.romname}'),
+      key: ValueKey('game_${game.romname}'),
       onTap: () {
         setState(() => _selectedIndex = index);
         widget.onGameSelected(game);
@@ -865,7 +865,7 @@ class _GamesGridState extends State<GamesGrid> {
         : (hasScreenshot ? screenshotPath : '');
 
     return GestureDetector(
-      key: ValueKey('fanart_${game.romname}'),
+      key: ValueKey('game_${game.romname}'),
       onTap: () {
         setState(() => _selectedIndex = index);
         widget.onGameSelected(game);
@@ -980,15 +980,6 @@ class _GamesGridState extends State<GamesGrid> {
         (widget.system.shortName != null && widget.system.shortName!.isNotEmpty)
         ? widget.system.shortName!
         : widget.system.realName;
-    final selGame = _selectedIndex < widget.games.length
-        ? widget.games[_selectedIndex]
-        : null;
-    final selName = selGame != null
-        ? GameUtils.formatGameName(
-            selGame.name.isNotEmpty ? selGame.name : selGame.romname,
-          )
-        : '';
-
     return Container(
       margin: EdgeInsets.only(left: 8.r, right: 8.r, top: 8.r, bottom: 4.r),
       child: Row(
@@ -1045,20 +1036,7 @@ class _GamesGridState extends State<GamesGrid> {
               ),
             ),
           ),
-          if (selName.isNotEmpty) ...[
-            SizedBox(width: 10.r),
-            Expanded(
-              child: Text(
-                selName,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12.r,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ),
-          ],
+
         ],
       ),
     );
