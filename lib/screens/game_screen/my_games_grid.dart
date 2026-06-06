@@ -636,146 +636,144 @@ class _GamesGridState extends State<GamesGrid> {
                     milliseconds: _isNavigatingFast ? 120 : 300,
                   );
 
-              Widget buildRow(BuildContext ctx, int rowIndex) {
-                final row = _rows[rowIndex];
-                final cards = <Widget>[];
-                for (int j = 0; j < row.count; j++) {
-                  final idx = row.startIndex + j;
-                  final rect = _cardRects[idx];
-                  _ensureDims(idx);
-                  final card = _buildCard(
-                    idx,
-                    rect,
-                    systemFolder,
-                    fp,
-                    targetWidth,
-                    theme,
-                  );
-                  cards.add(
-                    SizedBox(
-                      width: rect.width,
-                      height: rect.height,
-                      child: card,
-                    ),
-                  );
-                }
-                return SizedBox(
-                  height: row.height + _spY,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: _interleaveSpacing(cards, _spX),
-                  ),
-                );
-              }
+                  Widget buildRow(BuildContext ctx, int rowIndex) {
+                    final row = _rows[rowIndex];
+                    final cards = <Widget>[];
+                    for (int j = 0; j < row.count; j++) {
+                      final idx = row.startIndex + j;
+                      final rect = _cardRects[idx];
+                      _ensureDims(idx);
+                      final card = _buildCard(
+                        idx,
+                        rect,
+                        systemFolder,
+                        fp,
+                        targetWidth,
+                        theme,
+                      );
+                      cards.add(
+                        SizedBox(
+                          width: rect.width,
+                          height: rect.height,
+                          child: card,
+                        ),
+                      );
+                    }
+                    return SizedBox(
+                      height: row.height + _spY,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: _interleaveSpacing(cards, _spX),
+                      ),
+                    );
+                  }
 
-              return Listener(
-                onPointerDown: _handlePointerDown,
-                onPointerMove: _handlePointerMove,
-                onPointerUp: _handlePointerUp,
-                onPointerCancel: _handlePointerCancel,
-                behavior: HitTestBehavior.translucent,
-                child: Stack(
-                  children: [
-                    CustomScrollView(
-                      controller: _scrollController,
-                      slivers: [
-                        SliverPadding(
-                          padding: EdgeInsets.only(
-                            top: 12,
-                            bottom: 80,
-                            left: 16,
-                            right: 16,
+                  return Listener(
+                    onPointerDown: _handlePointerDown,
+                    onPointerMove: _handlePointerMove,
+                    onPointerUp: _handlePointerUp,
+                    onPointerCancel: _handlePointerCancel,
+                    behavior: HitTestBehavior.translucent,
+                    child: Stack(
+                      children: [
+                        CustomScrollView(
+                          controller: _scrollController,
+                          slivers: [
+                            SliverPadding(
+                              padding: EdgeInsets.only(
+                                top: 12,
+                                bottom: 80,
+                                left: 16,
+                                right: 16,
+                              ),
+                              sliver: SliverList.builder(
+                                itemCount: _rows.length,
+                                itemBuilder: buildRow,
+                              ),
+                            ),
+                          ],
+                        ),
+                        AnimatedPositioned(
+                          key: const ValueKey('game_selector'),
+                          duration: hlDuration,
+                          curve: Curves.easeOutQuart,
+                          left: selRect.left + 16,
+                          top: selRect.top + 12,
+                          width: selRect.width,
+                          height: selRect.height,
+                          child: ListenableBuilder(
+                            listenable: _scrollController,
+                            builder: (_, child) {
+                              final offset = _scrollController.hasClients
+                                  ? _scrollController.offset
+                                  : 0.0;
+                              return Transform.translate(
+                                offset: Offset(0, -offset),
+                                child: IgnorePointer(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: theme.colorScheme.secondary,
+                                        width: 4.r,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                          sliver: SliverList.builder(
-                            itemCount: _rows.length,
-                            itemBuilder: buildRow,
+                        ),
+                        ValueListenableBuilder<String?>(
+                          valueListenable: _cardSizeLabel,
+                          builder: (context, label, child) => AnimatedOpacity(
+                            opacity: label != null ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 200),
+                            child: IgnorePointer(
+                              child: Center(
+                                child: label != null
+                                    ? Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 20.r,
+                                          vertical: 10.r,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary
+                                              .withValues(alpha: 0.9),
+                                          borderRadius: BorderRadius.circular(
+                                            24.r,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          label,
+                                          style: TextStyle(
+                                            color: theme.colorScheme.onPrimary,
+                                            fontSize: 18.r,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 2.r,
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    AnimatedPositioned(
-                      key: const ValueKey('game_selector'),
-                      duration: hlDuration,
-                      curve: Curves.easeOutQuart,
-                      left: selRect.left + 16,
-                      top: selRect.top + 12,
-                      width: selRect.width,
-                      height: selRect.height,
-                      child: ListenableBuilder(
-                        listenable: _scrollController,
-                        builder: (_, child) {
-                          final offset = _scrollController.hasClients
-                              ? _scrollController.offset
-                              : 0.0;
-                          return Transform.translate(
-                            offset: Offset(0, -offset),
-                            child: IgnorePointer(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: theme.colorScheme.secondary,
-                                    width: 4.r,
-                                  ),
-                                  borderRadius: BorderRadius.circular(12.r),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    ValueListenableBuilder<String?>(
-                      valueListenable: _cardSizeLabel,
-                      builder: (context, label, child) => AnimatedOpacity(
-                        opacity: label != null ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 200),
-                        child: IgnorePointer(
-                          child: Center(
-                            child: label != null
-                                ? Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 20.r,
-                                      vertical: 10.r,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.primary
-                                          .withValues(alpha: 0.9),
-                                      borderRadius: BorderRadius.circular(24.r),
-                                    ),
-                                    child: Text(
-                                      label,
-                                      style: TextStyle(
-                                        color: theme.colorScheme.onPrimary,
-                                        fontSize: 18.r,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 2.r,
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                  );
+                },
+              ),
+            ),
+            GameViewFooter(
+              game: widget
+                  .games[_selectedIndex.clamp(0, widget.games.length - 1)],
+              onPlay: widget.onPlay,
+            ),
+          ],
         ),
-        GameViewFooter(
-          game: widget.games[_selectedIndex.clamp(0, widget.games.length - 1)],
-          onPlay: widget.onPlay,
-        ),
+        Positioned(top: 0, left: 0, right: 0, child: _buildGridHeader()),
       ],
-    ),
-    Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: _buildGridHeader(),
-    ),
-  ],
     );
   }
 
@@ -1047,7 +1045,6 @@ class _GamesGridState extends State<GamesGrid> {
               ),
             ),
           ),
-
         ],
       ),
     );

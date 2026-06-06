@@ -12,15 +12,10 @@ class GameViewFooter extends StatelessWidget {
   final GameModel game;
   final VoidCallback onPlay;
 
-  const GameViewFooter({
-    super.key,
-    required this.game,
-    required this.onPlay,
-  });
+  const GameViewFooter({super.key, required this.game, required this.onPlay});
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 6.r),
       child: Row(

@@ -137,8 +137,7 @@ class _GamesCarouselState extends State<GamesCarousel> {
 
   static const String _favoritesLabel = '★';
 
-  bool get _hasFavoriteGames =>
-      widget.games.any((g) => g.isFavorite == true);
+  bool get _hasFavoriteGames => widget.games.any((g) => g.isFavorite == true);
 
   List<String> get _uniqueLetters {
     final letters = <String>[];
@@ -819,84 +818,79 @@ class _GamesCarouselState extends State<GamesCarousel> {
                 onPageChanged: _onPageChanged,
               ),
             ),
-        SizedBox(
-          height: 36.r,
-          child: SingleChildScrollView(
-            controller: _letterBarController,
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 4.r, vertical: 2.r),
-            child: Stack(
-              children: [
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 120),
-                  curve: Curves.easeInOut,
-                  left: _getLetterBarOffset(
-                    currentLetter,
-                    letters,
-                    selectedTextStyle,
-                  ),
-                  top: 0,
-                  bottom: 0,
-                  width: _calculateLetterWidth(
-                    currentLetter,
-                    selectedTextStyle,
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.secondary,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
-                ),
-                Row(
-                  children: letters.map((letter) {
-                    final isSelected = letter == currentLetter;
-                    final w = _calculateLetterWidth(letter, selectedTextStyle);
-                    return GestureDetector(
-                      onTap: () {
-                        SfxService().playNavSound();
-                        final gi = _getFirstGameIndexForLetter(letter);
-                        _carouselKey.currentState?.animateToPage(gi);
-                      },
+            SizedBox(
+              height: 36.r,
+              child: SingleChildScrollView(
+                controller: _letterBarController,
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: 4.r, vertical: 2.r),
+                child: Stack(
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 120),
+                      curve: Curves.easeInOut,
+                      left: _getLetterBarOffset(
+                        currentLetter,
+                        letters,
+                        selectedTextStyle,
+                      ),
+                      top: 0,
+                      bottom: 0,
+                      width: _calculateLetterWidth(
+                        currentLetter,
+                        selectedTextStyle,
+                      ),
                       child: Container(
-                        width: w,
-                        height: 30.r,
-                        margin: EdgeInsets.only(right: 6.r),
-                        alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.1,
-                          ),
+                          color: theme.colorScheme.secondary,
                           borderRadius: BorderRadius.circular(12.r),
                         ),
-                        child: Text(
-                          letter,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          style: isSelected ? selectedTextStyle : textStyle,
-                        ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                    Row(
+                      children: letters.map((letter) {
+                        final isSelected = letter == currentLetter;
+                        final w = _calculateLetterWidth(
+                          letter,
+                          selectedTextStyle,
+                        );
+                        return GestureDetector(
+                          onTap: () {
+                            SfxService().playNavSound();
+                            final gi = _getFirstGameIndexForLetter(letter);
+                            _carouselKey.currentState?.animateToPage(gi);
+                          },
+                          child: Container(
+                            width: w,
+                            height: 30.r,
+                            margin: EdgeInsets.only(right: 6.r),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Text(
+                              letter,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              style: isSelected ? selectedTextStyle : textStyle,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+            GameViewFooter(game: currentGame, onPlay: widget.onPlay),
+            SizedBox(height: 8.r),
+          ],
         ),
-        GameViewFooter(
-          game: currentGame,
-          onPlay: widget.onPlay,
-        ),
-        SizedBox(height: 8.r),
+        Positioned(top: 0, left: 0, right: 0, child: _buildGridHeader()),
       ],
-    ),
-    Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: _buildGridHeader(),
-    ),
-  ],
     );
   }
 }
