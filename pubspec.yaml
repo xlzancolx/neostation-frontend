@@ -57,8 +57,7 @@ dependencies:
   marquee: ^2.3.0
   logger: ^2.7.0
   sub_screen: ^0.1.9
-  flutter_soloud:
-    path: packages/flutter_soloud
+  flutter_soloud: ^3.1.1
   audio_metadata_reader: ^1.6.0
   wakelock_plus: ^1.6.1
   flutter_localization: ^0.4.0

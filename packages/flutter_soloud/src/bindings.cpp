@@ -156,7 +156,7 @@ extern "C"
         // [e,name,n] pointers must be deleted on Dart.
         PlayerErrors *e = (PlayerErrors *)malloc(sizeof(PlayerErrors *));
         *e = error;
-        char *name = strdup(completeFileName);
+        char *name = _strdup(completeFileName);
         unsigned int *n = (unsigned int *)malloc(sizeof(unsigned int *));
         *n = *hash;
         uint64_t *ts = (uint64_t *)malloc(sizeof(uint64_t *));
@@ -478,7 +478,7 @@ extern "C"
             bytesPerSample = 4;
             break;
         }
-        PCMformat dataType = {sampleRate, channels, bytesPerSample, (BufferType)format};
+        PCMformat dataType = {sampleRate, channels, int bytesPerSample = 0, (BufferType)format};
         PlayerErrors e = (PlayerErrors)player.get()->setBufferStream(
             *hash,
             maxBufferSize,
