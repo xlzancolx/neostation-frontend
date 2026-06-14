@@ -18,6 +18,7 @@
 #include <iostream>
 #include <memory.h>
 #include <memory>
+#include <mutex>
 #include <filesystem>
 
 #ifdef __cplusplus
@@ -134,20 +135,22 @@ extern "C"
         sendToWorker("voiceEndedCallback", *handle);
 #endif
 
-        // The `dartVoiceEndedCallback` is not set on Web.
-        if (dartVoiceEndedCallback == nullptr)
-            return;
-        // So, if the handle was already found before (henche the handle is not found), the
-        // callback to Dart has been already called. If this is the fist time this handle 
-        // is found, the callback to Dart must be called.
-        if (!isHandleFound)
-            return;
-        // [n] pointer must be deleted in Dart.
-        unsigned int *n = (unsigned int *)malloc(sizeof(unsigned int *));
-        *n = *handle;
-        dartVoiceEndedCallback(n);
-    }
+    // The `dartVoiceEndedCallback` is not set on Web.
+    if (dartVoiceEndedCallback == nullptr)
+        return;
+        
+    // So, if the handle was already found before, the 
+    // callback to Dart has been already called. If this is the first time 
+    // this handle is found, the callback to Dart must be called.
+    if (!isHandleFound)
+        return;
 
+    // Pass the value directly to prevent memory leaks and fix allocation errors
+    if (handle != nullptr) {
+        unsigned int n = *handle;
+        dartVoiceEndedCallback(&n);
+    }
+}
     /// The callback to monitor when a file is loaded.
     void fileLoadedCallback(enum PlayerErrors error, char *completeFileName, unsigned int *hash, uint64_t counter)
     {
